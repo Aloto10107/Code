@@ -358,9 +358,13 @@ public class FtcRobotControllerActivity extends Activity implements OnTouchListe
         mRgba.release();
     }
 
-    public boolean onTouch(View v, MotionEvent event) {
+    public boolean onTouch(View v, MotionEvent event)
+    {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
+
+        //Get a handle to the robot vision global variable
+        RobotVision g = (RobotVision) getApplication();
 
         int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
         int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
@@ -378,39 +382,37 @@ public class FtcRobotControllerActivity extends Activity implements OnTouchListe
         touchedRect.width = (x + 4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
         touchedRect.height = (y + 4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
 
-        Mat touchedRegionRgba = mRgba.submat(touchedRect);
-
-        Mat touchedRegionHsv = new Mat();
-        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
-
-        // Calculate average color of touched region
-        mBlobColorHsv = Core.sumElems(touchedRegionHsv);
-        int pointCount = touchedRect.width * touchedRect.height;
-        for (int i = 0; i < mBlobColorHsv.val.length; i++)
-            mBlobColorHsv.val[i] /= pointCount;
-
-        mBlobColorRgba = converScalarHsv2Rgba(mBlobColorHsv);
-
-        mDetector.setHsvColor(mBlobColorHsv);
-
-        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
-
         mIsColorSelected = true;
 
-        touchedRegionRgba.release();
-        touchedRegionHsv.release();
+        /*------------------------------------------------------------------------------------------
+         * Store the Set the object tracker to the initialization state. On the next camera frame event this
+         * state will be entered.
+         *----------------------------------------------------------------------------------------*/
+        g.setObjectTrackingRect( touchedRect);
+        g.setObjectTrackState( RobotVision.State.OBJECT_TRACK_INIT);
 
         return false; // don't need subsequent touch events
     }
 
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+    public Mat onCameraFrame(CvCameraViewFrame inputFrame)
+    {
         mRgba = inputFrame.rgba();
 
-        if (mIsColorSelected) {
-            //Get a handle to the robot vision global variable
-            RobotVision g = (RobotVision) getApplication();
+        //Get a handle to the robot vision global variable
+        RobotVision g = (RobotVision) getApplication();
 
-            List<List<Double>> blobs = g.findBlobs(mDetector, inputFrame);
+        /*------------------------------------------------------------------------------------------
+         * Track the color, coordinates, and area of the selected object.
+         *----------------------------------------------------------------------------------------*/
+        g.updateObjectTrack( mDetector,
+                             inputFrame,
+                             mSpectrum,
+                             SPECTRUM_SIZE);
+
+        if( g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)
+        {
+
+            List<List<Double>> blobs = g.getBlobs();
 
             Double area;
             int x;
@@ -435,11 +437,12 @@ public class FtcRobotControllerActivity extends Activity implements OnTouchListe
             }
 
             Mat colorLabel = mRgba.submat(4, 40, 4, 40);
-            colorLabel.setTo(mBlobColorRgba);
+            colorLabel.setTo(g.getObjectColorRgb());
 
             Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
             mSpectrum.copyTo(spectrumLabel);
-        }
+
+        }/*End if( g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)*/
 
         return mRgba;
     }

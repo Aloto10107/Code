@@ -4,12 +4,14 @@ import android.app.Application;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -25,22 +27,51 @@ public class RobotVision extends Application
     private CvCameraViewFrame currentImage;
     private int objectLostCount;
     private static int OBJECT_TRACK_TIMEOUT = 10;
+    private State objectTrackState;
+    private Scalar objectColorHsv;
+    private Scalar objectColorRgb;
+    private Rect objectTrackingRect;
 
     public enum State
     {
-        OBJECT_TRACK_INIT, OBJECT_TRACK, OBJECT_LOST
+        OBJECT_TRACK_INIT, OBJECT_TRACK, OBJECT_LOST, OBJECT_IDLE
     }
-
-    public State robotState;
 
     public List<List<Double>> blobs;
 
     public RobotVision()
     {
-        this.blobs           = new ArrayList<List<Double>>();
-        this.robotState      = State.OBJECT_TRACK_INIT;
-        this.objectLostCount = 0;
+        this.blobs              = new ArrayList<List<Double>>();
+        this.objectTrackState   = State.OBJECT_IDLE;
+        this.objectLostCount    = 0;
+        this.objectColorHsv     = new Scalar(255);
+        this.objectColorRgb     = new Scalar(255);
+        this.objectTrackingRect = new Rect();
     }/*End RobotVision*/
+
+    public Scalar getObjectColorRgb()
+    {
+       return this.objectColorRgb;
+    }
+
+    public Scalar getObjectColorHsv()
+    {
+       return this.objectColorHsv;
+    }
+
+    public void setObjectTrackingRect( Rect trackRect)
+    {
+       this.objectTrackingRect = trackRect;
+    }
+    public void setObjectTrackState( State objectState)
+    {
+       this.objectTrackState = objectState;
+    }
+
+    public State getObjectTrackState()
+    {
+       return this.objectTrackState;
+    }
 
     public void setCameraImage(CvCameraViewFrame currentImage)
     {
@@ -62,17 +93,26 @@ public class RobotVision extends Application
         return this.blobs;
     }/*End getBlobs*/
 
+    private Scalar convertScalarHsv2Rgba(Scalar hsvColor)
+    {
+       Mat pointMatRgba = new Mat();
+       Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
+       Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+
+       return new Scalar(pointMatRgba.get(0, 0));
+    }
+
     public void updateObjectTrack( ColorBlobDetector mDetector,
                                    CvCameraViewFrame currentImage,
-                                   boolean objectTouched)
+                                   Mat mSpectrum,
+                                   Size SPECTRUM_SIZE)
     {
        /*-------------------------------------------------------------------------------------------
-        * When the screen is pressed, go to the target initialization state.
+        * Store the current camera image...
         *-----------------------------------------------------------------------------------------*/
-       if( objectTouched)
-          this.robotState = State.OBJECT_TRACK_INIT;
+       this.currentImage = currentImage;
 
-        switch( this.robotState)
+        switch( this.objectTrackState)
         {
            case OBJECT_TRACK_INIT:
               /*------------------------------------------------------------------------------------
@@ -80,8 +120,27 @@ public class RobotVision extends Application
                * desired object to track. Find the center coordinates of the bounding rectangle and
                * initialize a 4 state Kalman filter to track the object.
                *----------------------------------------------------------------------------------*/
+              Mat touchedRegionRgba = currentImage.rgba().submat(this.objectTrackingRect);
+
+              Mat touchedRegionHsv = new Mat();
+              Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+
+              // Calculate average color of touched region
+              this.objectColorHsv = Core.sumElems(touchedRegionHsv);
+              int pointCount = this.objectTrackingRect.width * this.objectTrackingRect.height;
+              for (int i = 0; i < this.objectColorHsv.val.length; i++)
+                 this.objectColorHsv.val[i] /= pointCount;
+
+              this.objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
+
+              mDetector.setHsvColor(this.objectColorHsv);
+              Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+
+              touchedRegionRgba.release();
+              touchedRegionHsv.release();
+
               this.objectLostCount = 0;
-              this.robotState = State.OBJECT_TRACK;
+              this.objectTrackState = State.OBJECT_TRACK;
               break;/*End case OBJECT_TRACK_INIT:*/
 
            case OBJECT_TRACK:
@@ -92,9 +151,11 @@ public class RobotVision extends Application
                * small. If the blob detection algorithm hasn't identified the object for a preset
                * period of time, go to the object lost state.
                *----------------------------------------------------------------------------------*/
+              List<List<Double>> blobs = this.findBlobs(mDetector, currentImage);
+
               if( this.objectLostCount == OBJECT_TRACK_TIMEOUT)
               {
-                 this.robotState = State.OBJECT_LOST;
+                 this.objectTrackState = State.OBJECT_LOST;
               }/*End if( this.objectLostCount == OBJECT_TRACK_TIMEOUT)*/
 
               break;/*End case OBJECT_TRACK:*/
@@ -103,13 +164,20 @@ public class RobotVision extends Application
               this.objectLostCount = 0;
               break;/*End case OBJECT_LOST:*/
 
-        }/*End switch( this.robotState)*/
+           case OBJECT_IDLE:
+              /*------------------------------------------------------------------------------------
+               * This state is entered after boot, waiting for user to touch an object.
+               *----------------------------------------------------------------------------------*/
+              break;/*End case OBJECT_IDLE:*/
+
+        }/*End switch( this.objectTrackState)*/
 
        /*-------------------------------------------------------------------------------------------
         * Return the center coordinates, "tracking" bounding rectangle, and average HSV color of the
         * tracked object, use this information to scale the image such that the blob detection
         * algorithm looks in a specific area for the object of interest.
         *-----------------------------------------------------------------------------------------*/
+
     }/*End updateObjectTrack*/
 
     public Scalar getBlobColor(List<Double> blob)
@@ -138,6 +206,9 @@ public class RobotVision extends Application
         int pointCount = blobRect.width * blobRect.height;
         for (int i = 0; i < mBlobColorHsv.val.length; i++)
             mBlobColorHsv.val[i] /= pointCount;
+
+        blobRegionRgba.release();
+        blobRegionHsv.release();
 
         return mBlobColorHsv;
     }
