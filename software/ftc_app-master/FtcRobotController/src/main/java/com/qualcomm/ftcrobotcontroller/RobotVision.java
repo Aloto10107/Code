@@ -23,10 +23,12 @@ import static org.opencv.imgproc.Imgproc.boundingRect;
 public class RobotVision extends Application
 {
     private CvCameraViewFrame currentImage;
+    private int objectLostCount;
+    private static int OBJECT_TRACK_TIMEOUT = 10;
 
     public enum State
     {
-        TARGET_INIT, TARGET_TRACK, TARGET_LOST
+        OBJECT_TRACK_INIT, OBJECT_TRACK, OBJECT_LOST
     }
 
     public State robotState;
@@ -35,8 +37,9 @@ public class RobotVision extends Application
 
     public RobotVision()
     {
-        this.blobs = new ArrayList<List<Double>>();
-        this.robotState = State.TARGET_INIT;
+        this.blobs           = new ArrayList<List<Double>>();
+        this.robotState      = State.OBJECT_TRACK_INIT;
+        this.objectLostCount = 0;
     }/*End RobotVision*/
 
     public void setCameraImage(CvCameraViewFrame currentImage)
@@ -60,22 +63,55 @@ public class RobotVision extends Application
     }/*End getBlobs*/
 
     public void updateObjectTrack( ColorBlobDetector mDetector,
-                                   CvCameraViewFrame currentImage)
+                                   CvCameraViewFrame currentImage,
+                                   boolean objectTouched)
     {
+
+       /*-------------------------------------------------------------------------------------------
+        * When the screen is pressed, go to the target initialization state.
+        *-----------------------------------------------------------------------------------------*/
+       if( objectTouched)
+          this.robotState = State.OBJECT_TRACK_INIT;
 
         switch( this.robotState)
         {
-           case TARGET_INIT:
-              break;
+           case OBJECT_TRACK_INIT:
+              /*------------------------------------------------------------------------------------
+               * Find the average bounding rectangle and average color within the bounds for the
+               * desired object to track. Find the center coordinates of the bounding rectangle and
+               * initialize a 4 state Kalman filter to track the object.
+               *----------------------------------------------------------------------------------*/
+              this.objectLostCount = 0;
+              this.robotState = State.OBJECT_TRACK;
+              break;/*End case OBJECT_TRACK_INIT:*/
 
-           case TARGET_TRACK:
-              break;
+           case OBJECT_TRACK:
+              /*------------------------------------------------------------------------------------
+               * Track the location of the object using a Kalman filter. Use the qualtiy of the
+               * covariance matrix to adjust the size of the "tracking" bounding rectangle i.e. i
+               * f the covariance is large make the bounding rectangle large, otherwise make it
+               * small. If the blob detection algorithm hasn't identified the object for a preset
+               * period of time, go to the object lost state.
+               *----------------------------------------------------------------------------------*/
+              if( this.objectLostCount == OBJECT_TRACK_TIMEOUT)
+              {
+                 this.robotState = State.OBJECT_LOST;
+              }/*End if( this.objectLostCount == OBJECT_TRACK_TIMEOUT)*/
 
-           case TARGET_LOST:
-              break;
+              break;/*End case OBJECT_TRACK:*/
+
+           case OBJECT_LOST:
+              this.objectLostCount = 0;
+              break;/*End case OBJECT_LOST:*/
+
         }/*End switch( this.robotState)*/
 
-    }/*End updateVision*/
+       /*-------------------------------------------------------------------------------------------
+        * Return the center coordinates, "tracking" bounding rectangle, and average HSV color of the
+        * tracked object, use this information to scale the image such that the blob detection
+        * algorithm looks in a specific area for the object of interest.
+        *-----------------------------------------------------------------------------------------*/
+    }/*End updateObjectTrack*/
 
     public Scalar getBlobColor(List<Double> blob)
     {
@@ -83,7 +119,7 @@ public class RobotVision extends Application
         int y;
         int width;
         int height;
-       
+
         Scalar mBlobColorHsv = new Scalar(255);
 
         x = blob.get(1).intValue();
