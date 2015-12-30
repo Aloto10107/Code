@@ -11,7 +11,9 @@ import org.opencv.core.TermCriteria;
 //javadoc: LogisticRegression
 public class LogisticRegression extends StatModel {
 
-    protected LogisticRegression(long addr) { super(addr); }
+    protected LogisticRegression(long addr) {
+        super(addr);
+    }
 
 
     public static final int
@@ -27,11 +29,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::get_learnt_thetas()
-    public  Mat get_learnt_thetas()
-    {
-        
+    public Mat get_learnt_thetas() {
+
         Mat retVal = new Mat(get_learnt_thetas_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -41,11 +42,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::create()
-    public static LogisticRegression create()
-    {
-        
+    public static LogisticRegression create() {
+
         LogisticRegression retVal = new LogisticRegression(create_0());
-        
+
         return retVal;
     }
 
@@ -55,11 +55,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::getTermCriteria()
-    public  TermCriteria getTermCriteria()
-    {
-        
+    public TermCriteria getTermCriteria() {
+
         TermCriteria retVal = new TermCriteria(getTermCriteria_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -69,11 +68,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::getLearningRate()
-    public  double getLearningRate()
-    {
-        
+    public double getLearningRate() {
+
         double retVal = getLearningRate_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -83,20 +81,18 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::predict(samples, results, flags)
-    public  float predict(Mat samples, Mat results, int flags)
-    {
-        
+    public float predict(Mat samples, Mat results, int flags) {
+
         float retVal = predict_0(nativeObj, samples.nativeObj, results.nativeObj, flags);
-        
+
         return retVal;
     }
 
     //javadoc: LogisticRegression::predict(samples)
-    public  float predict(Mat samples)
-    {
-        
+    public float predict(Mat samples) {
+
         float retVal = predict_1(nativeObj, samples.nativeObj);
-        
+
         return retVal;
     }
 
@@ -106,11 +102,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::getIterations()
-    public  int getIterations()
-    {
-        
+    public int getIterations() {
+
         int retVal = getIterations_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -120,11 +115,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::getMiniBatchSize()
-    public  int getMiniBatchSize()
-    {
-        
+    public int getMiniBatchSize() {
+
         int retVal = getMiniBatchSize_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -134,11 +128,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::getRegularization()
-    public  int getRegularization()
-    {
-        
+    public int getRegularization() {
+
         int retVal = getRegularization_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -148,11 +141,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::getTrainMethod()
-    public  int getTrainMethod()
-    {
-        
+    public int getTrainMethod() {
+
         int retVal = getTrainMethod_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -162,11 +154,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::setIterations(val)
-    public  void setIterations(int val)
-    {
-        
+    public void setIterations(int val) {
+
         setIterations_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -176,11 +167,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::setLearningRate(val)
-    public  void setLearningRate(double val)
-    {
-        
+    public void setLearningRate(double val) {
+
         setLearningRate_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -190,11 +180,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::setMiniBatchSize(val)
-    public  void setMiniBatchSize(int val)
-    {
-        
+    public void setMiniBatchSize(int val) {
+
         setMiniBatchSize_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -204,11 +193,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::setRegularization(val)
-    public  void setRegularization(int val)
-    {
-        
+    public void setRegularization(int val) {
+
         setRegularization_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -218,11 +206,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::setTermCriteria(val)
-    public  void setTermCriteria(TermCriteria val)
-    {
-        
+    public void setTermCriteria(TermCriteria val) {
+
         setTermCriteria_0(nativeObj, val.type, val.maxCount, val.epsilon);
-        
+
         return;
     }
 
@@ -232,11 +219,10 @@ public class LogisticRegression extends StatModel {
     //
 
     //javadoc: LogisticRegression::setTrainMethod(val)
-    public  void setTrainMethod(int val)
-    {
-        
+    public void setTrainMethod(int val) {
+
         setTrainMethod_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -245,7 +231,6 @@ public class LogisticRegression extends StatModel {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  Mat get_learnt_thetas()
@@ -262,6 +247,7 @@ public class LogisticRegression extends StatModel {
 
     // C++:  float predict(Mat samples, Mat& results = Mat(), int flags = 0)
     private static native float predict_0(long nativeObj, long samples_nativeObj, long results_nativeObj, int flags);
+
     private static native float predict_1(long nativeObj, long samples_nativeObj);
 
     // C++:  int getIterations()

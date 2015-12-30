@@ -11,7 +11,9 @@ import org.opencv.core.Mat;
 //javadoc: StereoMatcher
 public class StereoMatcher extends Algorithm {
 
-    protected StereoMatcher(long addr) { super(addr); }
+    protected StereoMatcher(long addr) {
+        super(addr);
+    }
 
 
     public static final int
@@ -24,11 +26,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::getBlockSize()
-    public  int getBlockSize()
-    {
-        
+    public int getBlockSize() {
+
         int retVal = getBlockSize_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -38,11 +39,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::getDisp12MaxDiff()
-    public  int getDisp12MaxDiff()
-    {
-        
+    public int getDisp12MaxDiff() {
+
         int retVal = getDisp12MaxDiff_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -52,11 +52,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::getMinDisparity()
-    public  int getMinDisparity()
-    {
-        
+    public int getMinDisparity() {
+
         int retVal = getMinDisparity_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -66,11 +65,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::getNumDisparities()
-    public  int getNumDisparities()
-    {
-        
+    public int getNumDisparities() {
+
         int retVal = getNumDisparities_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -80,11 +78,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::getSpeckleRange()
-    public  int getSpeckleRange()
-    {
-        
+    public int getSpeckleRange() {
+
         int retVal = getSpeckleRange_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -94,11 +91,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::getSpeckleWindowSize()
-    public  int getSpeckleWindowSize()
-    {
-        
+    public int getSpeckleWindowSize() {
+
         int retVal = getSpeckleWindowSize_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -108,11 +104,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::compute(left, right, disparity)
-    public  void compute(Mat left, Mat right, Mat disparity)
-    {
-        
+    public void compute(Mat left, Mat right, Mat disparity) {
+
         compute_0(nativeObj, left.nativeObj, right.nativeObj, disparity.nativeObj);
-        
+
         return;
     }
 
@@ -122,11 +117,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::setBlockSize(blockSize)
-    public  void setBlockSize(int blockSize)
-    {
-        
+    public void setBlockSize(int blockSize) {
+
         setBlockSize_0(nativeObj, blockSize);
-        
+
         return;
     }
 
@@ -136,11 +130,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::setDisp12MaxDiff(disp12MaxDiff)
-    public  void setDisp12MaxDiff(int disp12MaxDiff)
-    {
-        
+    public void setDisp12MaxDiff(int disp12MaxDiff) {
+
         setDisp12MaxDiff_0(nativeObj, disp12MaxDiff);
-        
+
         return;
     }
 
@@ -150,11 +143,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::setMinDisparity(minDisparity)
-    public  void setMinDisparity(int minDisparity)
-    {
-        
+    public void setMinDisparity(int minDisparity) {
+
         setMinDisparity_0(nativeObj, minDisparity);
-        
+
         return;
     }
 
@@ -164,11 +156,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::setNumDisparities(numDisparities)
-    public  void setNumDisparities(int numDisparities)
-    {
-        
+    public void setNumDisparities(int numDisparities) {
+
         setNumDisparities_0(nativeObj, numDisparities);
-        
+
         return;
     }
 
@@ -178,11 +169,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::setSpeckleRange(speckleRange)
-    public  void setSpeckleRange(int speckleRange)
-    {
-        
+    public void setSpeckleRange(int speckleRange) {
+
         setSpeckleRange_0(nativeObj, speckleRange);
-        
+
         return;
     }
 
@@ -192,11 +182,10 @@ public class StereoMatcher extends Algorithm {
     //
 
     //javadoc: StereoMatcher::setSpeckleWindowSize(speckleWindowSize)
-    public  void setSpeckleWindowSize(int speckleWindowSize)
-    {
-        
+    public void setSpeckleWindowSize(int speckleWindowSize) {
+
         setSpeckleWindowSize_0(nativeObj, speckleWindowSize);
-        
+
         return;
     }
 
@@ -205,7 +194,6 @@ public class StereoMatcher extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  int getBlockSize()

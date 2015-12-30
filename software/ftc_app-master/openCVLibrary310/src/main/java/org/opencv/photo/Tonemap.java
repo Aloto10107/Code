@@ -11,7 +11,9 @@ import org.opencv.core.Mat;
 //javadoc: Tonemap
 public class Tonemap extends Algorithm {
 
-    protected Tonemap(long addr) { super(addr); }
+    protected Tonemap(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -19,11 +21,10 @@ public class Tonemap extends Algorithm {
     //
 
     //javadoc: Tonemap::getGamma()
-    public  float getGamma()
-    {
-        
+    public float getGamma() {
+
         float retVal = getGamma_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -33,11 +34,10 @@ public class Tonemap extends Algorithm {
     //
 
     //javadoc: Tonemap::process(src, dst)
-    public  void process(Mat src, Mat dst)
-    {
-        
+    public void process(Mat src, Mat dst) {
+
         process_0(nativeObj, src.nativeObj, dst.nativeObj);
-        
+
         return;
     }
 
@@ -47,11 +47,10 @@ public class Tonemap extends Algorithm {
     //
 
     //javadoc: Tonemap::setGamma(gamma)
-    public  void setGamma(float gamma)
-    {
-        
+    public void setGamma(float gamma) {
+
         setGamma_0(nativeObj, gamma);
-        
+
         return;
     }
 
@@ -60,7 +59,6 @@ public class Tonemap extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  float getGamma()

@@ -5,12 +5,13 @@
 package org.opencv.photo;
 
 
-
 // C++: class TonemapDurand
 //javadoc: TonemapDurand
 public class TonemapDurand extends Tonemap {
 
-    protected TonemapDurand(long addr) { super(addr); }
+    protected TonemapDurand(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -18,11 +19,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::getContrast()
-    public  float getContrast()
-    {
-        
+    public float getContrast() {
+
         float retVal = getContrast_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -32,11 +32,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::getSaturation()
-    public  float getSaturation()
-    {
-        
+    public float getSaturation() {
+
         float retVal = getSaturation_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -46,11 +45,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::getSigmaColor()
-    public  float getSigmaColor()
-    {
-        
+    public float getSigmaColor() {
+
         float retVal = getSigmaColor_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -60,11 +58,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::getSigmaSpace()
-    public  float getSigmaSpace()
-    {
-        
+    public float getSigmaSpace() {
+
         float retVal = getSigmaSpace_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -74,11 +71,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::setContrast(contrast)
-    public  void setContrast(float contrast)
-    {
-        
+    public void setContrast(float contrast) {
+
         setContrast_0(nativeObj, contrast);
-        
+
         return;
     }
 
@@ -88,11 +84,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::setSaturation(saturation)
-    public  void setSaturation(float saturation)
-    {
-        
+    public void setSaturation(float saturation) {
+
         setSaturation_0(nativeObj, saturation);
-        
+
         return;
     }
 
@@ -102,11 +97,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::setSigmaColor(sigma_color)
-    public  void setSigmaColor(float sigma_color)
-    {
-        
+    public void setSigmaColor(float sigma_color) {
+
         setSigmaColor_0(nativeObj, sigma_color);
-        
+
         return;
     }
 
@@ -116,11 +110,10 @@ public class TonemapDurand extends Tonemap {
     //
 
     //javadoc: TonemapDurand::setSigmaSpace(sigma_space)
-    public  void setSigmaSpace(float sigma_space)
-    {
-        
+    public void setSigmaSpace(float sigma_space) {
+
         setSigmaSpace_0(nativeObj, sigma_space);
-        
+
         return;
     }
 
@@ -129,7 +122,6 @@ public class TonemapDurand extends Tonemap {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  float getContrast()

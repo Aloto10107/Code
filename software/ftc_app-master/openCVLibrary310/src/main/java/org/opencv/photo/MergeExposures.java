@@ -6,6 +6,7 @@ package org.opencv.photo;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.opencv.core.Algorithm;
 import org.opencv.core.Mat;
 import org.opencv.utils.Converters;
@@ -14,7 +15,9 @@ import org.opencv.utils.Converters;
 //javadoc: MergeExposures
 public class MergeExposures extends Algorithm {
 
-    protected MergeExposures(long addr) { super(addr); }
+    protected MergeExposures(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -22,11 +25,10 @@ public class MergeExposures extends Algorithm {
     //
 
     //javadoc: MergeExposures::process(src, dst, times, response)
-    public  void process(List<Mat> src, Mat dst, Mat times, Mat response)
-    {
+    public void process(List<Mat> src, Mat dst, Mat times, Mat response) {
         Mat src_mat = Converters.vector_Mat_to_Mat(src);
         process_0(nativeObj, src_mat.nativeObj, dst.nativeObj, times.nativeObj, response.nativeObj);
-        
+
         return;
     }
 
@@ -35,7 +37,6 @@ public class MergeExposures extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  void process(vector_Mat src, Mat& dst, Mat times, Mat response)

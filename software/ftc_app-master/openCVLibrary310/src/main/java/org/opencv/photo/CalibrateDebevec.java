@@ -5,12 +5,13 @@
 package org.opencv.photo;
 
 
-
 // C++: class CalibrateDebevec
 //javadoc: CalibrateDebevec
 public class CalibrateDebevec extends CalibrateCRF {
 
-    protected CalibrateDebevec(long addr) { super(addr); }
+    protected CalibrateDebevec(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -18,11 +19,10 @@ public class CalibrateDebevec extends CalibrateCRF {
     //
 
     //javadoc: CalibrateDebevec::getRandom()
-    public  boolean getRandom()
-    {
-        
+    public boolean getRandom() {
+
         boolean retVal = getRandom_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -32,11 +32,10 @@ public class CalibrateDebevec extends CalibrateCRF {
     //
 
     //javadoc: CalibrateDebevec::getLambda()
-    public  float getLambda()
-    {
-        
+    public float getLambda() {
+
         float retVal = getLambda_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -46,11 +45,10 @@ public class CalibrateDebevec extends CalibrateCRF {
     //
 
     //javadoc: CalibrateDebevec::getSamples()
-    public  int getSamples()
-    {
-        
+    public int getSamples() {
+
         int retVal = getSamples_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -60,11 +58,10 @@ public class CalibrateDebevec extends CalibrateCRF {
     //
 
     //javadoc: CalibrateDebevec::setLambda(lambda)
-    public  void setLambda(float lambda)
-    {
-        
+    public void setLambda(float lambda) {
+
         setLambda_0(nativeObj, lambda);
-        
+
         return;
     }
 
@@ -74,11 +71,10 @@ public class CalibrateDebevec extends CalibrateCRF {
     //
 
     //javadoc: CalibrateDebevec::setRandom(random)
-    public  void setRandom(boolean random)
-    {
-        
+    public void setRandom(boolean random) {
+
         setRandom_0(nativeObj, random);
-        
+
         return;
     }
 
@@ -88,11 +84,10 @@ public class CalibrateDebevec extends CalibrateCRF {
     //
 
     //javadoc: CalibrateDebevec::setSamples(samples)
-    public  void setSamples(int samples)
-    {
-        
+    public void setSamples(int samples) {
+
         setSamples_0(nativeObj, samples);
-        
+
         return;
     }
 
@@ -101,7 +96,6 @@ public class CalibrateDebevec extends CalibrateCRF {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  bool getRandom()

@@ -5,12 +5,13 @@
 package org.opencv.photo;
 
 
-
 // C++: class TonemapDrago
 //javadoc: TonemapDrago
 public class TonemapDrago extends Tonemap {
 
-    protected TonemapDrago(long addr) { super(addr); }
+    protected TonemapDrago(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -18,11 +19,10 @@ public class TonemapDrago extends Tonemap {
     //
 
     //javadoc: TonemapDrago::getBias()
-    public  float getBias()
-    {
-        
+    public float getBias() {
+
         float retVal = getBias_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -32,11 +32,10 @@ public class TonemapDrago extends Tonemap {
     //
 
     //javadoc: TonemapDrago::getSaturation()
-    public  float getSaturation()
-    {
-        
+    public float getSaturation() {
+
         float retVal = getSaturation_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -46,11 +45,10 @@ public class TonemapDrago extends Tonemap {
     //
 
     //javadoc: TonemapDrago::setBias(bias)
-    public  void setBias(float bias)
-    {
-        
+    public void setBias(float bias) {
+
         setBias_0(nativeObj, bias);
-        
+
         return;
     }
 
@@ -60,11 +58,10 @@ public class TonemapDrago extends Tonemap {
     //
 
     //javadoc: TonemapDrago::setSaturation(saturation)
-    public  void setSaturation(float saturation)
-    {
-        
+    public void setSaturation(float saturation) {
+
         setSaturation_0(nativeObj, saturation);
-        
+
         return;
     }
 
@@ -73,7 +70,6 @@ public class TonemapDrago extends Tonemap {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  float getBias()

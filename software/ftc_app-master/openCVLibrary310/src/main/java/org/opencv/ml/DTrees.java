@@ -10,14 +10,16 @@ import org.opencv.core.Mat;
 //javadoc: DTrees
 public class DTrees extends StatModel {
 
-    protected DTrees(long addr) { super(addr); }
+    protected DTrees(long addr) {
+        super(addr);
+    }
 
 
     public static final int
             PREDICT_AUTO = 0,
-            PREDICT_SUM = (1<<8),
-            PREDICT_MAX_VOTE = (2<<8),
-            PREDICT_MASK = (3<<8);
+            PREDICT_SUM = (1 << 8),
+            PREDICT_MAX_VOTE = (2 << 8),
+            PREDICT_MASK = (3 << 8);
 
 
     //
@@ -25,11 +27,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getPriors()
-    public  Mat getPriors()
-    {
-        
+    public Mat getPriors() {
+
         Mat retVal = new Mat(getPriors_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -39,11 +40,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::create()
-    public static DTrees create()
-    {
-        
+    public static DTrees create() {
+
         DTrees retVal = new DTrees(create_0());
-        
+
         return retVal;
     }
 
@@ -53,11 +53,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getTruncatePrunedTree()
-    public  boolean getTruncatePrunedTree()
-    {
-        
+    public boolean getTruncatePrunedTree() {
+
         boolean retVal = getTruncatePrunedTree_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -67,11 +66,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getUse1SERule()
-    public  boolean getUse1SERule()
-    {
-        
+    public boolean getUse1SERule() {
+
         boolean retVal = getUse1SERule_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -81,11 +79,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getUseSurrogates()
-    public  boolean getUseSurrogates()
-    {
-        
+    public boolean getUseSurrogates() {
+
         boolean retVal = getUseSurrogates_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -95,11 +92,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getRegressionAccuracy()
-    public  float getRegressionAccuracy()
-    {
-        
+    public float getRegressionAccuracy() {
+
         float retVal = getRegressionAccuracy_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -109,11 +105,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getCVFolds()
-    public  int getCVFolds()
-    {
-        
+    public int getCVFolds() {
+
         int retVal = getCVFolds_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -123,11 +118,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getMaxCategories()
-    public  int getMaxCategories()
-    {
-        
+    public int getMaxCategories() {
+
         int retVal = getMaxCategories_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -137,11 +131,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getMaxDepth()
-    public  int getMaxDepth()
-    {
-        
+    public int getMaxDepth() {
+
         int retVal = getMaxDepth_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -151,11 +144,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::getMinSampleCount()
-    public  int getMinSampleCount()
-    {
-        
+    public int getMinSampleCount() {
+
         int retVal = getMinSampleCount_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -165,11 +157,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setCVFolds(val)
-    public  void setCVFolds(int val)
-    {
-        
+    public void setCVFolds(int val) {
+
         setCVFolds_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -179,11 +170,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setMaxCategories(val)
-    public  void setMaxCategories(int val)
-    {
-        
+    public void setMaxCategories(int val) {
+
         setMaxCategories_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -193,11 +183,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setMaxDepth(val)
-    public  void setMaxDepth(int val)
-    {
-        
+    public void setMaxDepth(int val) {
+
         setMaxDepth_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -207,11 +196,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setMinSampleCount(val)
-    public  void setMinSampleCount(int val)
-    {
-        
+    public void setMinSampleCount(int val) {
+
         setMinSampleCount_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -221,11 +209,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setPriors(val)
-    public  void setPriors(Mat val)
-    {
-        
+    public void setPriors(Mat val) {
+
         setPriors_0(nativeObj, val.nativeObj);
-        
+
         return;
     }
 
@@ -235,11 +222,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setRegressionAccuracy(val)
-    public  void setRegressionAccuracy(float val)
-    {
-        
+    public void setRegressionAccuracy(float val) {
+
         setRegressionAccuracy_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -249,11 +235,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setTruncatePrunedTree(val)
-    public  void setTruncatePrunedTree(boolean val)
-    {
-        
+    public void setTruncatePrunedTree(boolean val) {
+
         setTruncatePrunedTree_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -263,11 +248,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setUse1SERule(val)
-    public  void setUse1SERule(boolean val)
-    {
-        
+    public void setUse1SERule(boolean val) {
+
         setUse1SERule_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -277,11 +261,10 @@ public class DTrees extends StatModel {
     //
 
     //javadoc: DTrees::setUseSurrogates(val)
-    public  void setUseSurrogates(boolean val)
-    {
-        
+    public void setUseSurrogates(boolean val) {
+
         setUseSurrogates_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -290,7 +273,6 @@ public class DTrees extends StatModel {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  Mat getPriors()

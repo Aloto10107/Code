@@ -23,17 +23,26 @@ import static org.opencv.imgproc.Imgproc.boundingRect;
 public class RobotVision extends Application
 {
     private CvCameraViewFrame currentImage;
+
+    public enum State
+    {
+        TARGET_INIT, TARGET_TRACK, TARGET_LOST
+    }
+
+    public State robotState;
+
     public List<List<Double>> blobs;
 
     public RobotVision()
     {
-        blobs = new ArrayList<List<Double>>();
-    }
+        this.blobs = new ArrayList<List<Double>>();
+        this.robotState = State.TARGET_INIT;
+    }/*End RobotVision*/
 
     public void setCameraImage(CvCameraViewFrame currentImage)
     {
-        this.currentImage=currentImage;
-    }
+        this.currentImage = currentImage;
+    }/*End setCameraImage*/
 
     public CvCameraViewFrame getCameraImage()
     {
@@ -42,15 +51,33 @@ public class RobotVision extends Application
 
     public void setBlobs(List<List<Double>> blobs)
     {
-        this.blobs=blobs;
+        this.blobs = blobs;
     }
 
     public List<List<Double>> getBlobs()
     {
         return this.blobs;
-    }
+    }/*End getBlobs*/
 
-    public Scalar getBlobColor( List<Double> blob)
+    public void updateObjectTrack( ColorBlobDetector mDetector,
+                                   CvCameraViewFrame currentImage)
+    {
+
+        switch( this.robotState)
+        {
+           case TARGET_INIT:
+              break;
+
+           case TARGET_TRACK:
+              break;
+
+           case TARGET_LOST:
+              break;
+        }/*End switch( this.robotState)*/
+
+    }/*End updateVision*/
+
+    public Scalar getBlobColor(List<Double> blob)
     {
         int x;
         int y;
@@ -63,7 +90,7 @@ public class RobotVision extends Application
         width = blob.get(4).intValue();
         height = blob.get(5).intValue();
 
-        Rect blobRect = new Rect(x,y,width,height);
+        Rect blobRect = new Rect(x, y, width, height);
 
         Mat blobRegionRgba = currentImage.rgba().submat(blobRect);
 
@@ -79,7 +106,12 @@ public class RobotVision extends Application
         return mBlobColorHsv;
     }
 
-    public List<List<Double>> findBlobs( ColorBlobDetector mDetector, CvCameraViewFrame currentImage)
+    public void setObjectToTrack(ColorBlobDetector mDetector, CvCameraViewFrame currentImage)
+    {
+
+    }
+
+    public List<List<Double>> findBlobs(ColorBlobDetector mDetector, CvCameraViewFrame currentImage)
     {
         int cols = currentImage.rgba().cols();
         int rows = currentImage.rgba().rows();
@@ -111,28 +143,28 @@ public class RobotVision extends Application
 
             ArrayList<Double> singleAddress = new ArrayList<Double>();
 
-            x = rect.x + rect.width/2;
-            y = rect.y + rect.height/2;
+            x = rect.x + rect.width / 2;
+            y = rect.y + rect.height / 2;
             area = rect.area();
             //Center coordinate x
-            singleAddress.add((double)(x - cols / 2));
+            singleAddress.add((double) (x - cols / 2));
             //Rect starting coordinate x
-            singleAddress.add((double)rect.x);
+            singleAddress.add((double) rect.x);
             //Center coordinate y
-            singleAddress.add((double)(-y + rows / 2));
+            singleAddress.add((double) (-y + rows / 2));
             //Rect starting coordinate y
-            singleAddress.add((double)rect.y);
+            singleAddress.add((double) rect.y);
             //Rect width
-            singleAddress.add((double)rect.width);
+            singleAddress.add((double) rect.width);
             //Rect height
-            singleAddress.add((double)rect.height);
+            singleAddress.add((double) rect.height);
             //Blob area
             singleAddress.add(area);
 
             addresses.add(singleAddress);
         }
 
-        this.blobs        = addresses;
+        this.blobs = addresses;
         this.currentImage = currentImage;
         return this.blobs;
     }

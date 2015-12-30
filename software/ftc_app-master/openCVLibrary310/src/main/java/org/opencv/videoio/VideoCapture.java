@@ -5,6 +5,7 @@
 package org.opencv.videoio;
 
 import java.lang.String;
+
 import org.opencv.core.Mat;
 
 // C++: class VideoCapture
@@ -12,7 +13,10 @@ import org.opencv.core.Mat;
 public class VideoCapture {
 
     protected final long nativeObj;
-    protected VideoCapture(long addr) { nativeObj = addr; }
+
+    protected VideoCapture(long addr) {
+        nativeObj = addr;
+    }
 
 
     //
@@ -20,11 +24,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::VideoCapture(filename, apiPreference)
-    public   VideoCapture(String filename, int apiPreference)
-    {
-        
+    public VideoCapture(String filename, int apiPreference) {
+
         nativeObj = VideoCapture_0(filename, apiPreference);
-        
+
         return;
     }
 
@@ -34,11 +37,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::VideoCapture(filename)
-    public   VideoCapture(String filename)
-    {
-        
+    public VideoCapture(String filename) {
+
         nativeObj = VideoCapture_1(filename);
-        
+
         return;
     }
 
@@ -48,11 +50,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::VideoCapture(index)
-    public   VideoCapture(int index)
-    {
-        
+    public VideoCapture(int index) {
+
         nativeObj = VideoCapture_2(index);
-        
+
         return;
     }
 
@@ -62,11 +63,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::VideoCapture()
-    public   VideoCapture()
-    {
-        
+    public VideoCapture() {
+
         nativeObj = VideoCapture_3();
-        
+
         return;
     }
 
@@ -76,11 +76,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::grab()
-    public  boolean grab()
-    {
-        
+    public boolean grab() {
+
         boolean retVal = grab_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -90,11 +89,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::isOpened()
-    public  boolean isOpened()
-    {
-        
+    public boolean isOpened() {
+
         boolean retVal = isOpened_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -104,11 +102,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::open(filename, apiPreference)
-    public  boolean open(String filename, int apiPreference)
-    {
-        
+    public boolean open(String filename, int apiPreference) {
+
         boolean retVal = open_0(nativeObj, filename, apiPreference);
-        
+
         return retVal;
     }
 
@@ -118,11 +115,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::open(filename)
-    public  boolean open(String filename)
-    {
-        
+    public boolean open(String filename) {
+
         boolean retVal = open_1(nativeObj, filename);
-        
+
         return retVal;
     }
 
@@ -132,11 +128,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::open(index)
-    public  boolean open(int index)
-    {
-        
+    public boolean open(int index) {
+
         boolean retVal = open_2(nativeObj, index);
-        
+
         return retVal;
     }
 
@@ -146,11 +141,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::read(image)
-    public  boolean read(Mat image)
-    {
-        
+    public boolean read(Mat image) {
+
         boolean retVal = read_0(nativeObj, image.nativeObj);
-        
+
         return retVal;
     }
 
@@ -160,20 +154,18 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::retrieve(image, flag)
-    public  boolean retrieve(Mat image, int flag)
-    {
-        
+    public boolean retrieve(Mat image, int flag) {
+
         boolean retVal = retrieve_0(nativeObj, image.nativeObj, flag);
-        
+
         return retVal;
     }
 
     //javadoc: VideoCapture::retrieve(image)
-    public  boolean retrieve(Mat image)
-    {
-        
+    public boolean retrieve(Mat image) {
+
         boolean retVal = retrieve_1(nativeObj, image.nativeObj);
-        
+
         return retVal;
     }
 
@@ -183,11 +175,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::set(propId, value)
-    public  boolean set(int propId, double value)
-    {
-        
+    public boolean set(int propId, double value) {
+
         boolean retVal = set_0(nativeObj, propId, value);
-        
+
         return retVal;
     }
 
@@ -197,11 +188,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::get(propId)
-    public  double get(int propId)
-    {
-        
+    public double get(int propId) {
+
         double retVal = get_0(nativeObj, propId);
-        
+
         return retVal;
     }
 
@@ -211,11 +201,10 @@ public class VideoCapture {
     //
 
     //javadoc: VideoCapture::release()
-    public  void release()
-    {
-        
+    public void release() {
+
         release_0(nativeObj);
-        
+
         return;
     }
 
@@ -224,7 +213,6 @@ public class VideoCapture {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:   VideoCapture(String filename, int apiPreference)
@@ -259,6 +247,7 @@ public class VideoCapture {
 
     // C++:  bool retrieve(Mat& image, int flag = 0)
     private static native boolean retrieve_0(long nativeObj, long image_nativeObj, int flag);
+
     private static native boolean retrieve_1(long nativeObj, long image_nativeObj);
 
     // C++:  bool set(int propId, double value)

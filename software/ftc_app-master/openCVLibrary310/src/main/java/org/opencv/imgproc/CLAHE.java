@@ -12,7 +12,9 @@ import org.opencv.core.Size;
 //javadoc: CLAHE
 public class CLAHE extends Algorithm {
 
-    protected CLAHE(long addr) { super(addr); }
+    protected CLAHE(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -20,11 +22,10 @@ public class CLAHE extends Algorithm {
     //
 
     //javadoc: CLAHE::getTilesGridSize()
-    public  Size getTilesGridSize()
-    {
-        
+    public Size getTilesGridSize() {
+
         Size retVal = new Size(getTilesGridSize_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -34,11 +35,10 @@ public class CLAHE extends Algorithm {
     //
 
     //javadoc: CLAHE::getClipLimit()
-    public  double getClipLimit()
-    {
-        
+    public double getClipLimit() {
+
         double retVal = getClipLimit_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -48,11 +48,10 @@ public class CLAHE extends Algorithm {
     //
 
     //javadoc: CLAHE::apply(src, dst)
-    public  void apply(Mat src, Mat dst)
-    {
-        
+    public void apply(Mat src, Mat dst) {
+
         apply_0(nativeObj, src.nativeObj, dst.nativeObj);
-        
+
         return;
     }
 
@@ -62,11 +61,10 @@ public class CLAHE extends Algorithm {
     //
 
     //javadoc: CLAHE::collectGarbage()
-    public  void collectGarbage()
-    {
-        
+    public void collectGarbage() {
+
         collectGarbage_0(nativeObj);
-        
+
         return;
     }
 
@@ -76,11 +74,10 @@ public class CLAHE extends Algorithm {
     //
 
     //javadoc: CLAHE::setClipLimit(clipLimit)
-    public  void setClipLimit(double clipLimit)
-    {
-        
+    public void setClipLimit(double clipLimit) {
+
         setClipLimit_0(nativeObj, clipLimit);
-        
+
         return;
     }
 
@@ -90,11 +87,10 @@ public class CLAHE extends Algorithm {
     //
 
     //javadoc: CLAHE::setTilesGridSize(tileGridSize)
-    public  void setTilesGridSize(Size tileGridSize)
-    {
-        
+    public void setTilesGridSize(Size tileGridSize) {
+
         setTilesGridSize_0(nativeObj, tileGridSize.width, tileGridSize.height);
-        
+
         return;
     }
 
@@ -103,7 +99,6 @@ public class CLAHE extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  Size getTilesGridSize()

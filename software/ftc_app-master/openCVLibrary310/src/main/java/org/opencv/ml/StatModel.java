@@ -11,7 +11,9 @@ import org.opencv.core.Mat;
 //javadoc: StatModel
 public class StatModel extends Algorithm {
 
-    protected StatModel(long addr) { super(addr); }
+    protected StatModel(long addr) {
+        super(addr);
+    }
 
 
     public static final int
@@ -26,11 +28,10 @@ public class StatModel extends Algorithm {
     //
 
     //javadoc: StatModel::empty()
-    public  boolean empty()
-    {
-        
+    public boolean empty() {
+
         boolean retVal = empty_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -40,11 +41,10 @@ public class StatModel extends Algorithm {
     //
 
     //javadoc: StatModel::isClassifier()
-    public  boolean isClassifier()
-    {
-        
+    public boolean isClassifier() {
+
         boolean retVal = isClassifier_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -54,11 +54,10 @@ public class StatModel extends Algorithm {
     //
 
     //javadoc: StatModel::isTrained()
-    public  boolean isTrained()
-    {
-        
+    public boolean isTrained() {
+
         boolean retVal = isTrained_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -68,11 +67,10 @@ public class StatModel extends Algorithm {
     //
 
     //javadoc: StatModel::train(samples, layout, responses)
-    public  boolean train(Mat samples, int layout, Mat responses)
-    {
-        
+    public boolean train(Mat samples, int layout, Mat responses) {
+
         boolean retVal = train_0(nativeObj, samples.nativeObj, layout, responses.nativeObj);
-        
+
         return retVal;
     }
 
@@ -96,20 +94,18 @@ public class StatModel extends Algorithm {
     //
 
     //javadoc: StatModel::predict(samples, results, flags)
-    public  float predict(Mat samples, Mat results, int flags)
-    {
-        
+    public float predict(Mat samples, Mat results, int flags) {
+
         float retVal = predict_0(nativeObj, samples.nativeObj, results.nativeObj, flags);
-        
+
         return retVal;
     }
 
     //javadoc: StatModel::predict(samples)
-    public  float predict(Mat samples)
-    {
-        
+    public float predict(Mat samples) {
+
         float retVal = predict_1(nativeObj, samples.nativeObj);
-        
+
         return retVal;
     }
 
@@ -119,11 +115,10 @@ public class StatModel extends Algorithm {
     //
 
     //javadoc: StatModel::getVarCount()
-    public  int getVarCount()
-    {
-        
+    public int getVarCount() {
+
         int retVal = getVarCount_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -132,7 +127,6 @@ public class StatModel extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  bool empty()
@@ -149,6 +143,7 @@ public class StatModel extends Algorithm {
 
     // C++:  float predict(Mat samples, Mat& results = Mat(), int flags = 0)
     private static native float predict_0(long nativeObj, long samples_nativeObj, long results_nativeObj, int flags);
+
     private static native float predict_1(long nativeObj, long samples_nativeObj);
 
     // C++:  int getVarCount()

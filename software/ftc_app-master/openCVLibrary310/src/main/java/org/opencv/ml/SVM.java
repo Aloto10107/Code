@@ -11,7 +11,9 @@ import org.opencv.core.TermCriteria;
 //javadoc: SVM
 public class SVM extends StatModel {
 
-    protected SVM(long addr) { super(addr); }
+    protected SVM(long addr) {
+        super(addr);
+    }
 
 
     public static final int
@@ -40,11 +42,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getClassWeights()
-    public  Mat getClassWeights()
-    {
-        
+    public Mat getClassWeights() {
+
         Mat retVal = new Mat(getClassWeights_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -54,11 +55,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getSupportVectors()
-    public  Mat getSupportVectors()
-    {
-        
+    public Mat getSupportVectors() {
+
         Mat retVal = new Mat(getSupportVectors_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -68,11 +68,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getUncompressedSupportVectors()
-    public  Mat getUncompressedSupportVectors()
-    {
-        
+    public Mat getUncompressedSupportVectors() {
+
         Mat retVal = new Mat(getUncompressedSupportVectors_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -82,11 +81,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::create()
-    public static SVM create()
-    {
-        
+    public static SVM create() {
+
         SVM retVal = new SVM(create_0());
-        
+
         return retVal;
     }
 
@@ -96,11 +94,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getTermCriteria()
-    public  TermCriteria getTermCriteria()
-    {
-        
+    public TermCriteria getTermCriteria() {
+
         TermCriteria retVal = new TermCriteria(getTermCriteria_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -110,11 +107,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getC()
-    public  double getC()
-    {
-        
+    public double getC() {
+
         double retVal = getC_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -124,11 +120,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getCoef0()
-    public  double getCoef0()
-    {
-        
+    public double getCoef0() {
+
         double retVal = getCoef0_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -138,11 +133,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getDecisionFunction(i, alpha, svidx)
-    public  double getDecisionFunction(int i, Mat alpha, Mat svidx)
-    {
-        
+    public double getDecisionFunction(int i, Mat alpha, Mat svidx) {
+
         double retVal = getDecisionFunction_0(nativeObj, i, alpha.nativeObj, svidx.nativeObj);
-        
+
         return retVal;
     }
 
@@ -152,11 +146,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getDegree()
-    public  double getDegree()
-    {
-        
+    public double getDegree() {
+
         double retVal = getDegree_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -166,11 +159,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getGamma()
-    public  double getGamma()
-    {
-        
+    public double getGamma() {
+
         double retVal = getGamma_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -180,11 +172,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getNu()
-    public  double getNu()
-    {
-        
+    public double getNu() {
+
         double retVal = getNu_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -194,11 +185,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getP()
-    public  double getP()
-    {
-        
+    public double getP() {
+
         double retVal = getP_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -208,11 +198,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getKernelType()
-    public  int getKernelType()
-    {
-        
+    public int getKernelType() {
+
         int retVal = getKernelType_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -222,11 +211,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::getType()
-    public  int getType()
-    {
-        
+    public int getType() {
+
         int retVal = getType_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -236,11 +224,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setC(val)
-    public  void setC(double val)
-    {
-        
+    public void setC(double val) {
+
         setC_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -250,11 +237,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setClassWeights(val)
-    public  void setClassWeights(Mat val)
-    {
-        
+    public void setClassWeights(Mat val) {
+
         setClassWeights_0(nativeObj, val.nativeObj);
-        
+
         return;
     }
 
@@ -264,11 +250,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setCoef0(val)
-    public  void setCoef0(double val)
-    {
-        
+    public void setCoef0(double val) {
+
         setCoef0_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -278,11 +263,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setDegree(val)
-    public  void setDegree(double val)
-    {
-        
+    public void setDegree(double val) {
+
         setDegree_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -292,11 +276,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setGamma(val)
-    public  void setGamma(double val)
-    {
-        
+    public void setGamma(double val) {
+
         setGamma_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -306,11 +289,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setKernel(kernelType)
-    public  void setKernel(int kernelType)
-    {
-        
+    public void setKernel(int kernelType) {
+
         setKernel_0(nativeObj, kernelType);
-        
+
         return;
     }
 
@@ -320,11 +302,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setNu(val)
-    public  void setNu(double val)
-    {
-        
+    public void setNu(double val) {
+
         setNu_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -334,11 +315,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setP(val)
-    public  void setP(double val)
-    {
-        
+    public void setP(double val) {
+
         setP_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -348,11 +328,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setTermCriteria(val)
-    public  void setTermCriteria(TermCriteria val)
-    {
-        
+    public void setTermCriteria(TermCriteria val) {
+
         setTermCriteria_0(nativeObj, val.type, val.maxCount, val.epsilon);
-        
+
         return;
     }
 
@@ -362,11 +341,10 @@ public class SVM extends StatModel {
     //
 
     //javadoc: SVM::setType(val)
-    public  void setType(int val)
-    {
-        
+    public void setType(int val) {
+
         setType_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -375,7 +353,6 @@ public class SVM extends StatModel {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  Mat getClassWeights()

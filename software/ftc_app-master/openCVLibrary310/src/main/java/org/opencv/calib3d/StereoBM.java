@@ -10,7 +10,9 @@ import org.opencv.core.Rect;
 //javadoc: StereoBM
 public class StereoBM extends StereoMatcher {
 
-    protected StereoBM(long addr) { super(addr); }
+    protected StereoBM(long addr) {
+        super(addr);
+    }
 
 
     public static final int
@@ -23,20 +25,18 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::create(numDisparities, blockSize)
-    public static StereoBM create(int numDisparities, int blockSize)
-    {
-        
+    public static StereoBM create(int numDisparities, int blockSize) {
+
         StereoBM retVal = new StereoBM(create_0(numDisparities, blockSize));
-        
+
         return retVal;
     }
 
     //javadoc: StereoBM::create()
-    public static StereoBM create()
-    {
-        
+    public static StereoBM create() {
+
         StereoBM retVal = new StereoBM(create_1());
-        
+
         return retVal;
     }
 
@@ -46,11 +46,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getROI1()
-    public  Rect getROI1()
-    {
-        
+    public Rect getROI1() {
+
         Rect retVal = new Rect(getROI1_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -60,11 +59,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getROI2()
-    public  Rect getROI2()
-    {
-        
+    public Rect getROI2() {
+
         Rect retVal = new Rect(getROI2_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -74,11 +72,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getPreFilterCap()
-    public  int getPreFilterCap()
-    {
-        
+    public int getPreFilterCap() {
+
         int retVal = getPreFilterCap_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -88,11 +85,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getPreFilterSize()
-    public  int getPreFilterSize()
-    {
-        
+    public int getPreFilterSize() {
+
         int retVal = getPreFilterSize_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -102,11 +98,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getPreFilterType()
-    public  int getPreFilterType()
-    {
-        
+    public int getPreFilterType() {
+
         int retVal = getPreFilterType_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -116,11 +111,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getSmallerBlockSize()
-    public  int getSmallerBlockSize()
-    {
-        
+    public int getSmallerBlockSize() {
+
         int retVal = getSmallerBlockSize_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -130,11 +124,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getTextureThreshold()
-    public  int getTextureThreshold()
-    {
-        
+    public int getTextureThreshold() {
+
         int retVal = getTextureThreshold_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -144,11 +137,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::getUniquenessRatio()
-    public  int getUniquenessRatio()
-    {
-        
+    public int getUniquenessRatio() {
+
         int retVal = getUniquenessRatio_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -158,11 +150,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setPreFilterCap(preFilterCap)
-    public  void setPreFilterCap(int preFilterCap)
-    {
-        
+    public void setPreFilterCap(int preFilterCap) {
+
         setPreFilterCap_0(nativeObj, preFilterCap);
-        
+
         return;
     }
 
@@ -172,11 +163,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setPreFilterSize(preFilterSize)
-    public  void setPreFilterSize(int preFilterSize)
-    {
-        
+    public void setPreFilterSize(int preFilterSize) {
+
         setPreFilterSize_0(nativeObj, preFilterSize);
-        
+
         return;
     }
 
@@ -186,11 +176,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setPreFilterType(preFilterType)
-    public  void setPreFilterType(int preFilterType)
-    {
-        
+    public void setPreFilterType(int preFilterType) {
+
         setPreFilterType_0(nativeObj, preFilterType);
-        
+
         return;
     }
 
@@ -200,11 +189,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setROI1(roi1)
-    public  void setROI1(Rect roi1)
-    {
-        
+    public void setROI1(Rect roi1) {
+
         setROI1_0(nativeObj, roi1.x, roi1.y, roi1.width, roi1.height);
-        
+
         return;
     }
 
@@ -214,11 +202,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setROI2(roi2)
-    public  void setROI2(Rect roi2)
-    {
-        
+    public void setROI2(Rect roi2) {
+
         setROI2_0(nativeObj, roi2.x, roi2.y, roi2.width, roi2.height);
-        
+
         return;
     }
 
@@ -228,11 +215,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setSmallerBlockSize(blockSize)
-    public  void setSmallerBlockSize(int blockSize)
-    {
-        
+    public void setSmallerBlockSize(int blockSize) {
+
         setSmallerBlockSize_0(nativeObj, blockSize);
-        
+
         return;
     }
 
@@ -242,11 +228,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setTextureThreshold(textureThreshold)
-    public  void setTextureThreshold(int textureThreshold)
-    {
-        
+    public void setTextureThreshold(int textureThreshold) {
+
         setTextureThreshold_0(nativeObj, textureThreshold);
-        
+
         return;
     }
 
@@ -256,11 +241,10 @@ public class StereoBM extends StereoMatcher {
     //
 
     //javadoc: StereoBM::setUniquenessRatio(uniquenessRatio)
-    public  void setUniquenessRatio(int uniquenessRatio)
-    {
-        
+    public void setUniquenessRatio(int uniquenessRatio) {
+
         setUniquenessRatio_0(nativeObj, uniquenessRatio);
-        
+
         return;
     }
 
@@ -271,9 +255,9 @@ public class StereoBM extends StereoMatcher {
     }
 
 
-
     // C++: static Ptr_StereoBM create(int numDisparities = 0, int blockSize = 21)
     private static native long create_0(int numDisparities, int blockSize);
+
     private static native long create_1();
 
     // C++:  Rect getROI1()

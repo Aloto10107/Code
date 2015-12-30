@@ -11,7 +11,9 @@ import org.opencv.core.Mat;
 //javadoc: DenseOpticalFlow
 public class DenseOpticalFlow extends Algorithm {
 
-    protected DenseOpticalFlow(long addr) { super(addr); }
+    protected DenseOpticalFlow(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -19,11 +21,10 @@ public class DenseOpticalFlow extends Algorithm {
     //
 
     //javadoc: DenseOpticalFlow::calc(I0, I1, flow)
-    public  void calc(Mat I0, Mat I1, Mat flow)
-    {
-        
+    public void calc(Mat I0, Mat I1, Mat flow) {
+
         calc_0(nativeObj, I0.nativeObj, I1.nativeObj, flow.nativeObj);
-        
+
         return;
     }
 
@@ -33,11 +34,10 @@ public class DenseOpticalFlow extends Algorithm {
     //
 
     //javadoc: DenseOpticalFlow::collectGarbage()
-    public  void collectGarbage()
-    {
-        
+    public void collectGarbage() {
+
         collectGarbage_0(nativeObj);
-        
+
         return;
     }
 
@@ -46,7 +46,6 @@ public class DenseOpticalFlow extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  void calc(Mat I0, Mat I1, Mat& flow)

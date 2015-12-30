@@ -6,6 +6,7 @@ package org.opencv.imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat4;
 import org.opencv.core.MatOfFloat6;
@@ -20,7 +21,10 @@ import org.opencv.utils.Converters;
 public class Subdiv2D {
 
     protected final long nativeObj;
-    protected Subdiv2D(long addr) { nativeObj = addr; }
+
+    protected Subdiv2D(long addr) {
+        nativeObj = addr;
+    }
 
 
     public static final int
@@ -44,11 +48,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::Subdiv2D(rect)
-    public   Subdiv2D(Rect rect)
-    {
-        
+    public Subdiv2D(Rect rect) {
+
         nativeObj = Subdiv2D_0(rect.x, rect.y, rect.width, rect.height);
-        
+
         return;
     }
 
@@ -58,11 +61,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::Subdiv2D()
-    public   Subdiv2D()
-    {
-        
+    public Subdiv2D() {
+
         nativeObj = Subdiv2D_1();
-        
+
         return;
     }
 
@@ -72,20 +74,18 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::getVertex(vertex, firstEdge)
-    public  Point getVertex(int vertex, int[] firstEdge)
-    {
+    public Point getVertex(int vertex, int[] firstEdge) {
         double[] firstEdge_out = new double[1];
         Point retVal = new Point(getVertex_0(nativeObj, vertex, firstEdge_out));
-        if(firstEdge!=null) firstEdge[0] = (int)firstEdge_out[0];
+        if (firstEdge != null) firstEdge[0] = (int) firstEdge_out[0];
         return retVal;
     }
 
     //javadoc: Subdiv2D::getVertex(vertex)
-    public  Point getVertex(int vertex)
-    {
-        
+    public Point getVertex(int vertex) {
+
         Point retVal = new Point(getVertex_1(nativeObj, vertex));
-        
+
         return retVal;
     }
 
@@ -95,20 +95,21 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::edgeDst(edge, dstpt)
-    public  int edgeDst(int edge, Point dstpt)
-    {
+    public int edgeDst(int edge, Point dstpt) {
         double[] dstpt_out = new double[2];
         int retVal = edgeDst_0(nativeObj, edge, dstpt_out);
-        if(dstpt!=null){ dstpt.x = dstpt_out[0]; dstpt.y = dstpt_out[1]; } 
+        if (dstpt != null) {
+            dstpt.x = dstpt_out[0];
+            dstpt.y = dstpt_out[1];
+        }
         return retVal;
     }
 
     //javadoc: Subdiv2D::edgeDst(edge)
-    public  int edgeDst(int edge)
-    {
-        
+    public int edgeDst(int edge) {
+
         int retVal = edgeDst_1(nativeObj, edge);
-        
+
         return retVal;
     }
 
@@ -118,20 +119,21 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::edgeOrg(edge, orgpt)
-    public  int edgeOrg(int edge, Point orgpt)
-    {
+    public int edgeOrg(int edge, Point orgpt) {
         double[] orgpt_out = new double[2];
         int retVal = edgeOrg_0(nativeObj, edge, orgpt_out);
-        if(orgpt!=null){ orgpt.x = orgpt_out[0]; orgpt.y = orgpt_out[1]; } 
+        if (orgpt != null) {
+            orgpt.x = orgpt_out[0];
+            orgpt.y = orgpt_out[1];
+        }
         return retVal;
     }
 
     //javadoc: Subdiv2D::edgeOrg(edge)
-    public  int edgeOrg(int edge)
-    {
-        
+    public int edgeOrg(int edge) {
+
         int retVal = edgeOrg_1(nativeObj, edge);
-        
+
         return retVal;
     }
 
@@ -141,20 +143,21 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::findNearest(pt, nearestPt)
-    public  int findNearest(Point pt, Point nearestPt)
-    {
+    public int findNearest(Point pt, Point nearestPt) {
         double[] nearestPt_out = new double[2];
         int retVal = findNearest_0(nativeObj, pt.x, pt.y, nearestPt_out);
-        if(nearestPt!=null){ nearestPt.x = nearestPt_out[0]; nearestPt.y = nearestPt_out[1]; } 
+        if (nearestPt != null) {
+            nearestPt.x = nearestPt_out[0];
+            nearestPt.y = nearestPt_out[1];
+        }
         return retVal;
     }
 
     //javadoc: Subdiv2D::findNearest(pt)
-    public  int findNearest(Point pt)
-    {
-        
+    public int findNearest(Point pt) {
+
         int retVal = findNearest_1(nativeObj, pt.x, pt.y);
-        
+
         return retVal;
     }
 
@@ -164,11 +167,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::getEdge(edge, nextEdgeType)
-    public  int getEdge(int edge, int nextEdgeType)
-    {
-        
+    public int getEdge(int edge, int nextEdgeType) {
+
         int retVal = getEdge_0(nativeObj, edge, nextEdgeType);
-        
+
         return retVal;
     }
 
@@ -178,11 +180,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::insert(pt)
-    public  int insert(Point pt)
-    {
-        
+    public int insert(Point pt) {
+
         int retVal = insert_0(nativeObj, pt.x, pt.y);
-        
+
         return retVal;
     }
 
@@ -192,13 +193,12 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::locate(pt, edge, vertex)
-    public  int locate(Point pt, int[] edge, int[] vertex)
-    {
+    public int locate(Point pt, int[] edge, int[] vertex) {
         double[] edge_out = new double[1];
         double[] vertex_out = new double[1];
         int retVal = locate_0(nativeObj, pt.x, pt.y, edge_out, vertex_out);
-        if(edge!=null) edge[0] = (int)edge_out[0];
-        if(vertex!=null) vertex[0] = (int)vertex_out[0];
+        if (edge != null) edge[0] = (int) edge_out[0];
+        if (vertex != null) vertex[0] = (int) vertex_out[0];
         return retVal;
     }
 
@@ -208,11 +208,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::nextEdge(edge)
-    public  int nextEdge(int edge)
-    {
-        
+    public int nextEdge(int edge) {
+
         int retVal = nextEdge_0(nativeObj, edge);
-        
+
         return retVal;
     }
 
@@ -222,11 +221,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::rotateEdge(edge, rotate)
-    public  int rotateEdge(int edge, int rotate)
-    {
-        
+    public int rotateEdge(int edge, int rotate) {
+
         int retVal = rotateEdge_0(nativeObj, edge, rotate);
-        
+
         return retVal;
     }
 
@@ -236,11 +234,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::symEdge(edge)
-    public  int symEdge(int edge)
-    {
-        
+    public int symEdge(int edge) {
+
         int retVal = symEdge_0(nativeObj, edge);
-        
+
         return retVal;
     }
 
@@ -250,11 +247,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::getEdgeList(edgeList)
-    public  void getEdgeList(MatOfFloat4 edgeList)
-    {
+    public void getEdgeList(MatOfFloat4 edgeList) {
         Mat edgeList_mat = edgeList;
         getEdgeList_0(nativeObj, edgeList_mat.nativeObj);
-        
+
         return;
     }
 
@@ -264,11 +260,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::getTriangleList(triangleList)
-    public  void getTriangleList(MatOfFloat6 triangleList)
-    {
+    public void getTriangleList(MatOfFloat6 triangleList) {
         Mat triangleList_mat = triangleList;
         getTriangleList_0(nativeObj, triangleList_mat.nativeObj);
-        
+
         return;
     }
 
@@ -278,8 +273,7 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::getVoronoiFacetList(idx, facetList, facetCenters)
-    public  void getVoronoiFacetList(MatOfInt idx, List<MatOfPoint2f> facetList, MatOfPoint2f facetCenters)
-    {
+    public void getVoronoiFacetList(MatOfInt idx, List<MatOfPoint2f> facetList, MatOfPoint2f facetCenters) {
         Mat idx_mat = idx;
         Mat facetList_mat = new Mat();
         Mat facetCenters_mat = facetCenters;
@@ -295,11 +289,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::initDelaunay(rect)
-    public  void initDelaunay(Rect rect)
-    {
-        
+    public void initDelaunay(Rect rect) {
+
         initDelaunay_0(nativeObj, rect.x, rect.y, rect.width, rect.height);
-        
+
         return;
     }
 
@@ -309,11 +302,10 @@ public class Subdiv2D {
     //
 
     //javadoc: Subdiv2D::insert(ptvec)
-    public  void insert(MatOfPoint2f ptvec)
-    {
+    public void insert(MatOfPoint2f ptvec) {
         Mat ptvec_mat = ptvec;
         insert_1(nativeObj, ptvec_mat.nativeObj);
-        
+
         return;
     }
 
@@ -324,7 +316,6 @@ public class Subdiv2D {
     }
 
 
-
     // C++:   Subdiv2D(Rect rect)
     private static native long Subdiv2D_0(int rect_x, int rect_y, int rect_width, int rect_height);
 
@@ -333,18 +324,22 @@ public class Subdiv2D {
 
     // C++:  Point2f getVertex(int vertex, int* firstEdge = 0)
     private static native double[] getVertex_0(long nativeObj, int vertex, double[] firstEdge_out);
+
     private static native double[] getVertex_1(long nativeObj, int vertex);
 
     // C++:  int edgeDst(int edge, Point2f* dstpt = 0)
     private static native int edgeDst_0(long nativeObj, int edge, double[] dstpt_out);
+
     private static native int edgeDst_1(long nativeObj, int edge);
 
     // C++:  int edgeOrg(int edge, Point2f* orgpt = 0)
     private static native int edgeOrg_0(long nativeObj, int edge, double[] orgpt_out);
+
     private static native int edgeOrg_1(long nativeObj, int edge);
 
     // C++:  int findNearest(Point2f pt, Point2f* nearestPt = 0)
     private static native int findNearest_0(long nativeObj, double pt_x, double pt_y, double[] nearestPt_out);
+
     private static native int findNearest_1(long nativeObj, double pt_x, double pt_y);
 
     // C++:  int getEdge(int edge, int nextEdgeType)

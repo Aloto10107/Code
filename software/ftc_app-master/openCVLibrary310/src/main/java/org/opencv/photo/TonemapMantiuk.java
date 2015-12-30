@@ -5,12 +5,13 @@
 package org.opencv.photo;
 
 
-
 // C++: class TonemapMantiuk
 //javadoc: TonemapMantiuk
 public class TonemapMantiuk extends Tonemap {
 
-    protected TonemapMantiuk(long addr) { super(addr); }
+    protected TonemapMantiuk(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -18,11 +19,10 @@ public class TonemapMantiuk extends Tonemap {
     //
 
     //javadoc: TonemapMantiuk::getSaturation()
-    public  float getSaturation()
-    {
-        
+    public float getSaturation() {
+
         float retVal = getSaturation_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -32,11 +32,10 @@ public class TonemapMantiuk extends Tonemap {
     //
 
     //javadoc: TonemapMantiuk::getScale()
-    public  float getScale()
-    {
-        
+    public float getScale() {
+
         float retVal = getScale_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -46,11 +45,10 @@ public class TonemapMantiuk extends Tonemap {
     //
 
     //javadoc: TonemapMantiuk::setSaturation(saturation)
-    public  void setSaturation(float saturation)
-    {
-        
+    public void setSaturation(float saturation) {
+
         setSaturation_0(nativeObj, saturation);
-        
+
         return;
     }
 
@@ -60,11 +58,10 @@ public class TonemapMantiuk extends Tonemap {
     //
 
     //javadoc: TonemapMantiuk::setScale(scale)
-    public  void setScale(float scale)
-    {
-        
+    public void setScale(float scale) {
+
         setScale_0(nativeObj, scale);
-        
+
         return;
     }
 
@@ -73,7 +70,6 @@ public class TonemapMantiuk extends Tonemap {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  float getSaturation()

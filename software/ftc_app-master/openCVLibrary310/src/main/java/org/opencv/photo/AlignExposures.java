@@ -6,6 +6,7 @@ package org.opencv.photo;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.opencv.core.Algorithm;
 import org.opencv.core.Mat;
 import org.opencv.utils.Converters;
@@ -14,7 +15,9 @@ import org.opencv.utils.Converters;
 //javadoc: AlignExposures
 public class AlignExposures extends Algorithm {
 
-    protected AlignExposures(long addr) { super(addr); }
+    protected AlignExposures(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -22,12 +25,11 @@ public class AlignExposures extends Algorithm {
     //
 
     //javadoc: AlignExposures::process(src, dst, times, response)
-    public  void process(List<Mat> src, List<Mat> dst, Mat times, Mat response)
-    {
+    public void process(List<Mat> src, List<Mat> dst, Mat times, Mat response) {
         Mat src_mat = Converters.vector_Mat_to_Mat(src);
         Mat dst_mat = Converters.vector_Mat_to_Mat(dst);
         process_0(nativeObj, src_mat.nativeObj, dst_mat.nativeObj, times.nativeObj, response.nativeObj);
-        
+
         return;
     }
 
@@ -36,7 +38,6 @@ public class AlignExposures extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  void process(vector_Mat src, vector_Mat dst, Mat times, Mat response)

@@ -5,12 +5,13 @@
 package org.opencv.video;
 
 
-
 // C++: class BackgroundSubtractorKNN
 //javadoc: BackgroundSubtractorKNN
 public class BackgroundSubtractorKNN extends BackgroundSubtractor {
 
-    protected BackgroundSubtractorKNN(long addr) { super(addr); }
+    protected BackgroundSubtractorKNN(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -18,11 +19,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::getDetectShadows()
-    public  boolean getDetectShadows()
-    {
-        
+    public boolean getDetectShadows() {
+
         boolean retVal = getDetectShadows_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -32,11 +32,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::getDist2Threshold()
-    public  double getDist2Threshold()
-    {
-        
+    public double getDist2Threshold() {
+
         double retVal = getDist2Threshold_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -46,11 +45,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::getShadowThreshold()
-    public  double getShadowThreshold()
-    {
-        
+    public double getShadowThreshold() {
+
         double retVal = getShadowThreshold_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -60,11 +58,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::getHistory()
-    public  int getHistory()
-    {
-        
+    public int getHistory() {
+
         int retVal = getHistory_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -74,11 +71,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::getNSamples()
-    public  int getNSamples()
-    {
-        
+    public int getNSamples() {
+
         int retVal = getNSamples_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -88,11 +84,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::getShadowValue()
-    public  int getShadowValue()
-    {
-        
+    public int getShadowValue() {
+
         int retVal = getShadowValue_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -102,11 +97,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::getkNNSamples()
-    public  int getkNNSamples()
-    {
-        
+    public int getkNNSamples() {
+
         int retVal = getkNNSamples_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -116,11 +110,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::setDetectShadows(detectShadows)
-    public  void setDetectShadows(boolean detectShadows)
-    {
-        
+    public void setDetectShadows(boolean detectShadows) {
+
         setDetectShadows_0(nativeObj, detectShadows);
-        
+
         return;
     }
 
@@ -130,11 +123,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::setDist2Threshold(_dist2Threshold)
-    public  void setDist2Threshold(double _dist2Threshold)
-    {
-        
+    public void setDist2Threshold(double _dist2Threshold) {
+
         setDist2Threshold_0(nativeObj, _dist2Threshold);
-        
+
         return;
     }
 
@@ -144,11 +136,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::setHistory(history)
-    public  void setHistory(int history)
-    {
-        
+    public void setHistory(int history) {
+
         setHistory_0(nativeObj, history);
-        
+
         return;
     }
 
@@ -158,11 +149,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::setNSamples(_nN)
-    public  void setNSamples(int _nN)
-    {
-        
+    public void setNSamples(int _nN) {
+
         setNSamples_0(nativeObj, _nN);
-        
+
         return;
     }
 
@@ -172,11 +162,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::setShadowThreshold(threshold)
-    public  void setShadowThreshold(double threshold)
-    {
-        
+    public void setShadowThreshold(double threshold) {
+
         setShadowThreshold_0(nativeObj, threshold);
-        
+
         return;
     }
 
@@ -186,11 +175,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::setShadowValue(value)
-    public  void setShadowValue(int value)
-    {
-        
+    public void setShadowValue(int value) {
+
         setShadowValue_0(nativeObj, value);
-        
+
         return;
     }
 
@@ -200,11 +188,10 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     //
 
     //javadoc: BackgroundSubtractorKNN::setkNNSamples(_nkNN)
-    public  void setkNNSamples(int _nkNN)
-    {
-        
+    public void setkNNSamples(int _nkNN) {
+
         setkNNSamples_0(nativeObj, _nkNN);
-        
+
         return;
     }
 
@@ -213,7 +200,6 @@ public class BackgroundSubtractorKNN extends BackgroundSubtractor {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  bool getDetectShadows()

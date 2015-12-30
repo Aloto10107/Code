@@ -6,6 +6,7 @@ package org.opencv.photo;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.opencv.core.Algorithm;
 import org.opencv.core.Mat;
 import org.opencv.utils.Converters;
@@ -14,7 +15,9 @@ import org.opencv.utils.Converters;
 //javadoc: CalibrateCRF
 public class CalibrateCRF extends Algorithm {
 
-    protected CalibrateCRF(long addr) { super(addr); }
+    protected CalibrateCRF(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -22,11 +25,10 @@ public class CalibrateCRF extends Algorithm {
     //
 
     //javadoc: CalibrateCRF::process(src, dst, times)
-    public  void process(List<Mat> src, Mat dst, Mat times)
-    {
+    public void process(List<Mat> src, Mat dst, Mat times) {
         Mat src_mat = Converters.vector_Mat_to_Mat(src);
         process_0(nativeObj, src_mat.nativeObj, dst.nativeObj, times.nativeObj);
-        
+
         return;
     }
 
@@ -35,7 +37,6 @@ public class CalibrateCRF extends Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  void process(vector_Mat src, Mat& dst, Mat times)

@@ -5,12 +5,13 @@
 package org.opencv.ml;
 
 
-
 // C++: class Boost
 //javadoc: Boost
 public class Boost extends DTrees {
 
-    protected Boost(long addr) { super(addr); }
+    protected Boost(long addr) {
+        super(addr);
+    }
 
 
     public static final int
@@ -25,11 +26,10 @@ public class Boost extends DTrees {
     //
 
     //javadoc: Boost::create()
-    public static Boost create()
-    {
-        
+    public static Boost create() {
+
         Boost retVal = new Boost(create_0());
-        
+
         return retVal;
     }
 
@@ -39,11 +39,10 @@ public class Boost extends DTrees {
     //
 
     //javadoc: Boost::getWeightTrimRate()
-    public  double getWeightTrimRate()
-    {
-        
+    public double getWeightTrimRate() {
+
         double retVal = getWeightTrimRate_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -53,11 +52,10 @@ public class Boost extends DTrees {
     //
 
     //javadoc: Boost::getBoostType()
-    public  int getBoostType()
-    {
-        
+    public int getBoostType() {
+
         int retVal = getBoostType_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -67,11 +65,10 @@ public class Boost extends DTrees {
     //
 
     //javadoc: Boost::getWeakCount()
-    public  int getWeakCount()
-    {
-        
+    public int getWeakCount() {
+
         int retVal = getWeakCount_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -81,11 +78,10 @@ public class Boost extends DTrees {
     //
 
     //javadoc: Boost::setBoostType(val)
-    public  void setBoostType(int val)
-    {
-        
+    public void setBoostType(int val) {
+
         setBoostType_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -95,11 +91,10 @@ public class Boost extends DTrees {
     //
 
     //javadoc: Boost::setWeakCount(val)
-    public  void setWeakCount(int val)
-    {
-        
+    public void setWeakCount(int val) {
+
         setWeakCount_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -109,11 +104,10 @@ public class Boost extends DTrees {
     //
 
     //javadoc: Boost::setWeightTrimRate(val)
-    public  void setWeightTrimRate(double val)
-    {
-        
+    public void setWeightTrimRate(double val) {
+
         setWeightTrimRate_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -122,7 +116,6 @@ public class Boost extends DTrees {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++: static Ptr_Boost create()

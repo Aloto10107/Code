@@ -6,6 +6,7 @@ package org.opencv.photo;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.opencv.core.Mat;
 import org.opencv.utils.Converters;
 
@@ -13,7 +14,9 @@ import org.opencv.utils.Converters;
 //javadoc: MergeMertens
 public class MergeMertens extends MergeExposures {
 
-    protected MergeMertens(long addr) { super(addr); }
+    protected MergeMertens(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -21,11 +24,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::getContrastWeight()
-    public  float getContrastWeight()
-    {
-        
+    public float getContrastWeight() {
+
         float retVal = getContrastWeight_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -35,11 +37,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::getExposureWeight()
-    public  float getExposureWeight()
-    {
-        
+    public float getExposureWeight() {
+
         float retVal = getExposureWeight_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -49,11 +50,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::getSaturationWeight()
-    public  float getSaturationWeight()
-    {
-        
+    public float getSaturationWeight() {
+
         float retVal = getSaturationWeight_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -63,11 +63,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::process(src, dst, times, response)
-    public  void process(List<Mat> src, Mat dst, Mat times, Mat response)
-    {
+    public void process(List<Mat> src, Mat dst, Mat times, Mat response) {
         Mat src_mat = Converters.vector_Mat_to_Mat(src);
         process_0(nativeObj, src_mat.nativeObj, dst.nativeObj, times.nativeObj, response.nativeObj);
-        
+
         return;
     }
 
@@ -77,11 +76,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::process(src, dst)
-    public  void process(List<Mat> src, Mat dst)
-    {
+    public void process(List<Mat> src, Mat dst) {
         Mat src_mat = Converters.vector_Mat_to_Mat(src);
         process_1(nativeObj, src_mat.nativeObj, dst.nativeObj);
-        
+
         return;
     }
 
@@ -91,11 +89,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::setContrastWeight(contrast_weiht)
-    public  void setContrastWeight(float contrast_weiht)
-    {
-        
+    public void setContrastWeight(float contrast_weiht) {
+
         setContrastWeight_0(nativeObj, contrast_weiht);
-        
+
         return;
     }
 
@@ -105,11 +102,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::setExposureWeight(exposure_weight)
-    public  void setExposureWeight(float exposure_weight)
-    {
-        
+    public void setExposureWeight(float exposure_weight) {
+
         setExposureWeight_0(nativeObj, exposure_weight);
-        
+
         return;
     }
 
@@ -119,11 +115,10 @@ public class MergeMertens extends MergeExposures {
     //
 
     //javadoc: MergeMertens::setSaturationWeight(saturation_weight)
-    public  void setSaturationWeight(float saturation_weight)
-    {
-        
+    public void setSaturationWeight(float saturation_weight) {
+
         setSaturationWeight_0(nativeObj, saturation_weight);
-        
+
         return;
     }
 
@@ -132,7 +127,6 @@ public class MergeMertens extends MergeExposures {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  float getContrastWeight()

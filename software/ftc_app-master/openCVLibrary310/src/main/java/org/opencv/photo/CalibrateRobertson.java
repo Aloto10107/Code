@@ -10,7 +10,9 @@ import org.opencv.core.Mat;
 //javadoc: CalibrateRobertson
 public class CalibrateRobertson extends CalibrateCRF {
 
-    protected CalibrateRobertson(long addr) { super(addr); }
+    protected CalibrateRobertson(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -18,11 +20,10 @@ public class CalibrateRobertson extends CalibrateCRF {
     //
 
     //javadoc: CalibrateRobertson::getRadiance()
-    public  Mat getRadiance()
-    {
-        
+    public Mat getRadiance() {
+
         Mat retVal = new Mat(getRadiance_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -32,11 +33,10 @@ public class CalibrateRobertson extends CalibrateCRF {
     //
 
     //javadoc: CalibrateRobertson::getThreshold()
-    public  float getThreshold()
-    {
-        
+    public float getThreshold() {
+
         float retVal = getThreshold_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -46,11 +46,10 @@ public class CalibrateRobertson extends CalibrateCRF {
     //
 
     //javadoc: CalibrateRobertson::getMaxIter()
-    public  int getMaxIter()
-    {
-        
+    public int getMaxIter() {
+
         int retVal = getMaxIter_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -60,11 +59,10 @@ public class CalibrateRobertson extends CalibrateCRF {
     //
 
     //javadoc: CalibrateRobertson::setMaxIter(max_iter)
-    public  void setMaxIter(int max_iter)
-    {
-        
+    public void setMaxIter(int max_iter) {
+
         setMaxIter_0(nativeObj, max_iter);
-        
+
         return;
     }
 
@@ -74,11 +72,10 @@ public class CalibrateRobertson extends CalibrateCRF {
     //
 
     //javadoc: CalibrateRobertson::setThreshold(threshold)
-    public  void setThreshold(float threshold)
-    {
-        
+    public void setThreshold(float threshold) {
+
         setThreshold_0(nativeObj, threshold);
-        
+
         return;
     }
 
@@ -87,7 +84,6 @@ public class CalibrateRobertson extends CalibrateCRF {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  Mat getRadiance()

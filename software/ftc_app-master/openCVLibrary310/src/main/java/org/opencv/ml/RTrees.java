@@ -11,7 +11,9 @@ import org.opencv.core.TermCriteria;
 //javadoc: RTrees
 public class RTrees extends DTrees {
 
-    protected RTrees(long addr) { super(addr); }
+    protected RTrees(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -19,11 +21,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::getVarImportance()
-    public  Mat getVarImportance()
-    {
-        
+    public Mat getVarImportance() {
+
         Mat retVal = new Mat(getVarImportance_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -33,11 +34,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::create()
-    public static RTrees create()
-    {
-        
+    public static RTrees create() {
+
         RTrees retVal = new RTrees(create_0());
-        
+
         return retVal;
     }
 
@@ -47,11 +47,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::getTermCriteria()
-    public  TermCriteria getTermCriteria()
-    {
-        
+    public TermCriteria getTermCriteria() {
+
         TermCriteria retVal = new TermCriteria(getTermCriteria_0(nativeObj));
-        
+
         return retVal;
     }
 
@@ -61,11 +60,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::getCalculateVarImportance()
-    public  boolean getCalculateVarImportance()
-    {
-        
+    public boolean getCalculateVarImportance() {
+
         boolean retVal = getCalculateVarImportance_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -75,11 +73,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::getActiveVarCount()
-    public  int getActiveVarCount()
-    {
-        
+    public int getActiveVarCount() {
+
         int retVal = getActiveVarCount_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -89,11 +86,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::setActiveVarCount(val)
-    public  void setActiveVarCount(int val)
-    {
-        
+    public void setActiveVarCount(int val) {
+
         setActiveVarCount_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -103,11 +99,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::setCalculateVarImportance(val)
-    public  void setCalculateVarImportance(boolean val)
-    {
-        
+    public void setCalculateVarImportance(boolean val) {
+
         setCalculateVarImportance_0(nativeObj, val);
-        
+
         return;
     }
 
@@ -117,11 +112,10 @@ public class RTrees extends DTrees {
     //
 
     //javadoc: RTrees::setTermCriteria(val)
-    public  void setTermCriteria(TermCriteria val)
-    {
-        
+    public void setTermCriteria(TermCriteria val) {
+
         setTermCriteria_0(nativeObj, val.type, val.maxCount, val.epsilon);
-        
+
         return;
     }
 
@@ -130,7 +124,6 @@ public class RTrees extends DTrees {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  Mat getVarImportance()

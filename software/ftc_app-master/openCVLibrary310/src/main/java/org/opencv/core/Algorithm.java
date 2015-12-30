@@ -11,7 +11,10 @@ import java.lang.String;
 public class Algorithm {
 
     protected final long nativeObj;
-    protected Algorithm(long addr) { nativeObj = addr; }
+
+    protected Algorithm(long addr) {
+        nativeObj = addr;
+    }
 
 
     //
@@ -19,11 +22,10 @@ public class Algorithm {
     //
 
     //javadoc: Algorithm::getDefaultName()
-    public  String getDefaultName()
-    {
-        
+    public String getDefaultName() {
+
         String retVal = getDefaultName_0(nativeObj);
-        
+
         return retVal;
     }
 
@@ -33,11 +35,10 @@ public class Algorithm {
     //
 
     //javadoc: Algorithm::clear()
-    public  void clear()
-    {
-        
+    public void clear() {
+
         clear_0(nativeObj);
-        
+
         return;
     }
 
@@ -47,11 +48,10 @@ public class Algorithm {
     //
 
     //javadoc: Algorithm::save(filename)
-    public  void save(String filename)
-    {
-        
+    public void save(String filename) {
+
         save_0(nativeObj, filename);
-        
+
         return;
     }
 
@@ -60,7 +60,6 @@ public class Algorithm {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  String getDefaultName()

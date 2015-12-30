@@ -6,6 +6,7 @@ package org.opencv.photo;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.opencv.core.Mat;
 import org.opencv.utils.Converters;
 
@@ -13,7 +14,9 @@ import org.opencv.utils.Converters;
 //javadoc: MergeDebevec
 public class MergeDebevec extends MergeExposures {
 
-    protected MergeDebevec(long addr) { super(addr); }
+    protected MergeDebevec(long addr) {
+        super(addr);
+    }
 
 
     //
@@ -21,11 +24,10 @@ public class MergeDebevec extends MergeExposures {
     //
 
     //javadoc: MergeDebevec::process(src, dst, times, response)
-    public  void process(List<Mat> src, Mat dst, Mat times, Mat response)
-    {
+    public void process(List<Mat> src, Mat dst, Mat times, Mat response) {
         Mat src_mat = Converters.vector_Mat_to_Mat(src);
         process_0(nativeObj, src_mat.nativeObj, dst.nativeObj, times.nativeObj, response.nativeObj);
-        
+
         return;
     }
 
@@ -35,11 +37,10 @@ public class MergeDebevec extends MergeExposures {
     //
 
     //javadoc: MergeDebevec::process(src, dst, times)
-    public  void process(List<Mat> src, Mat dst, Mat times)
-    {
+    public void process(List<Mat> src, Mat dst, Mat times) {
         Mat src_mat = Converters.vector_Mat_to_Mat(src);
         process_1(nativeObj, src_mat.nativeObj, dst.nativeObj, times.nativeObj);
-        
+
         return;
     }
 
@@ -48,7 +49,6 @@ public class MergeDebevec extends MergeExposures {
     protected void finalize() throws Throwable {
         delete(nativeObj);
     }
-
 
 
     // C++:  void process(vector_Mat src, Mat& dst, Mat times, Mat response)
