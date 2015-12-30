@@ -66,7 +66,6 @@ public class RobotVision extends Application
                                    CvCameraViewFrame currentImage,
                                    boolean objectTouched)
     {
-
        /*-------------------------------------------------------------------------------------------
         * When the screen is pressed, go to the target initialization state.
         *-----------------------------------------------------------------------------------------*/
