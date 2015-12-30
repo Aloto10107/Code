@@ -83,6 +83,7 @@ public class RobotVision extends Application
         int y;
         int width;
         int height;
+       
         Scalar mBlobColorHsv = new Scalar(255);
 
         x = blob.get(1).intValue();
