@@ -141,15 +141,13 @@ public class FtcRobotControllerActivity extends Activity implements OnTouchListe
 
    protected FtcEventLoop eventLoop;
 
-   private boolean mIsColorSelected = false;
    private Mat mRgba;
    private Scalar mBlobColorRgba;
    private Scalar mBlobColorHsv;
-   private ColorBlobDetector mDetector;
    private Mat mSpectrum;
    private Size SPECTRUM_SIZE;
    private Scalar CONTOUR_COLOR;
-
+   private RobotVision g;
    private CameraBridgeViewBase mOpenCvCameraView;
 
    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this)
@@ -373,12 +371,22 @@ public class FtcRobotControllerActivity extends Activity implements OnTouchListe
    public void onCameraViewStarted(int width, int height)
    {
       mRgba = new Mat(height, width, CvType.CV_8UC4);
-      mDetector = new ColorBlobDetector();
+      //mDetector = new ColorBlobDetector();
       mSpectrum = new Mat();
       mBlobColorRgba = new Scalar(255);
       mBlobColorHsv = new Scalar(255);
       SPECTRUM_SIZE = new Size(100, 35);
       CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
+      /*--------------------------------------------------------------------------------------------
+       * RobotVision is implemented as an application so that the methods are global to all
+       * applications.
+       *------------------------------------------------------------------------------------------*/
+      g = (RobotVision) getApplication();
+      /*--------------------------------------------------------------------------------------------
+       * Call robot vision init here so that the opencv native bindings have been declared after the
+       * camera starts.
+       *------------------------------------------------------------------------------------------*/
+      g.RobotVisionInit();
    }
 
    public void onCameraViewStopped()
@@ -410,8 +418,6 @@ public class FtcRobotControllerActivity extends Activity implements OnTouchListe
       touchedRect.width = (x + 8 < cols) ? x + 8 - touchedRect.x : cols - touchedRect.x;
       touchedRect.height = (y + 8 < rows) ? y + 8 - touchedRect.y : rows - touchedRect.y;
 
-      mIsColorSelected = true;
-
       /*--------------------------------------------------------------------------------------------
        * Set the object tracker to the initialization state. On the next camera frame event this
        * state will be entered.
@@ -429,17 +435,15 @@ public class FtcRobotControllerActivity extends Activity implements OnTouchListe
       //Get a handle to the robot vision global variable
       RobotVision g = (RobotVision) getApplication();
 
-        /*------------------------------------------------------------------------------------------
-         * Track the color, coordinates, and area of the selected object.
-         *----------------------------------------------------------------------------------------*/
-      mDetector = g.updateObjectTrack( mDetector,
-                                       inputFrame,
-                                       mSpectrum,
-                                       SPECTRUM_SIZE);
+      /*--------------------------------------------------------------------------------------------
+       * Track the color, coordinates, and area of the selected object.
+       *------------------------------------------------------------------------------------------*/
+      g.updateObjectTrack( inputFrame);
 
       if(g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)
       {
-         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+
+         Imgproc.resize(g.getBlobDetector().getSpectrum(), mSpectrum, SPECTRUM_SIZE);
          List<List<Double>> blobs = g.getBlobs();
 
          Double area;
