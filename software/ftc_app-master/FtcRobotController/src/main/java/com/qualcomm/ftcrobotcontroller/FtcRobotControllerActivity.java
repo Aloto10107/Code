@@ -109,514 +109,579 @@ import android.view.SurfaceView;
 
 import static org.opencv.imgproc.Imgproc.boundingRect;
 
-public class FtcRobotControllerActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
+public class FtcRobotControllerActivity extends Activity implements OnTouchListener, CvCameraViewListener2
+{
 
-    private static final int REQUEST_CONFIG_WIFI_CHANNEL = 1;
-    private static final boolean USE_DEVICE_EMULATION = false;
-    private static final int NUM_GAMEPADS = 2;
+   private static final int REQUEST_CONFIG_WIFI_CHANNEL = 1;
+   private static final boolean USE_DEVICE_EMULATION = false;
+   private static final int NUM_GAMEPADS = 2;
 
-    public static final String CONFIGURE_FILENAME = "CONFIGURE_FILENAME";
+   public static final String CONFIGURE_FILENAME = "CONFIGURE_FILENAME";
 
-    protected SharedPreferences preferences;
+   protected SharedPreferences preferences;
 
-    protected UpdateUI.Callback callback;
-    protected Context context;
-    private Utility utility;
-    protected ImageButton buttonMenu;
+   protected UpdateUI.Callback callback;
+   protected Context context;
+   private Utility utility;
+   protected ImageButton buttonMenu;
 
-    protected TextView textDeviceName;
-    protected TextView textWifiDirectStatus;
-    protected TextView textRobotStatus;
-    protected TextView[] textGamepad = new TextView[NUM_GAMEPADS];
-    protected TextView textOpMode;
-    protected TextView textErrorMessage;
-    protected ImmersiveMode immersion;
+   protected TextView textDeviceName;
+   protected TextView textWifiDirectStatus;
+   protected TextView textRobotStatus;
+   protected TextView[] textGamepad = new TextView[NUM_GAMEPADS];
+   protected TextView textOpMode;
+   protected TextView textErrorMessage;
+   protected ImmersiveMode immersion;
 
-    protected UpdateUI updateUI;
-    protected Dimmer dimmer;
-    protected LinearLayout entireScreenLayout;
+   protected UpdateUI updateUI;
+   protected Dimmer dimmer;
+   protected LinearLayout entireScreenLayout;
 
-    protected FtcRobotControllerService controllerService;
+   protected FtcRobotControllerService controllerService;
 
-    protected FtcEventLoop eventLoop;
+   protected FtcEventLoop eventLoop;
 
-    private boolean mIsColorSelected = false;
-    private Mat mRgba;
-    private Scalar mBlobColorRgba;
-    private Scalar mBlobColorHsv;
-    private ColorBlobDetector mDetector;
-    private Mat mSpectrum;
-    private Size SPECTRUM_SIZE;
-    private Scalar CONTOUR_COLOR;
+   private boolean mIsColorSelected = false;
+   private Mat mRgba;
+   private Scalar mBlobColorRgba;
+   private Scalar mBlobColorHsv;
+   private ColorBlobDetector mDetector;
+   private Mat mSpectrum;
+   private Size SPECTRUM_SIZE;
+   private Scalar CONTOUR_COLOR;
 
-    private CameraBridgeViewBase mOpenCvCameraView;
+   private CameraBridgeViewBase mOpenCvCameraView;
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
-                    mOpenCvCameraView.enableView();
-                    mOpenCvCameraView.setOnTouchListener(FtcRobotControllerActivity.this);
-                }
-                break;
-                default: {
-                    super.onManagerConnected(status);
-                }
-                break;
+   private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this)
+   {
+      @Override
+      public void onManagerConnected(int status)
+      {
+         switch(status)
+         {
+            case LoaderCallbackInterface.SUCCESS:
+            {
+               mOpenCvCameraView.enableView();
+               mOpenCvCameraView.setOnTouchListener(FtcRobotControllerActivity.this);
             }
-        }
-    };
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
-
-    protected class RobotRestarter implements Restarter {
-
-        public void requestRestart() {
-            requestRobotRestart();
-        }
-
-    }
-
-    protected ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            FtcRobotControllerBinder binder = (FtcRobotControllerBinder) service;
-            onServiceBind(binder.getService());
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            controllerService = null;
-        }
-    };
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if (UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(intent.getAction())) {
-            // a new USB device has been attached
-            DbgLog.msg("USB Device attached; app restart may be needed");
-        }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.activity_ftc_controller);
-
-        utility = new Utility(this);
-        context = this;
-        entireScreenLayout = (LinearLayout) findViewById(R.id.entire_screen);
-        buttonMenu = (ImageButton) findViewById(R.id.menu_buttons);
-        buttonMenu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openOptionsMenu();
+            break;
+            default:
+            {
+               super.onManagerConnected(status);
             }
-        });
+            break;
+         }
+      }
+   };
+   /**
+    * ATTENTION: This was auto-generated to implement the App Indexing API.
+    * See https://g.co/AppIndexing/AndroidStudio for more information.
+    */
+   private GoogleApiClient client;
 
-        textDeviceName = (TextView) findViewById(R.id.textDeviceName);
-        textWifiDirectStatus = (TextView) findViewById(R.id.textWifiDirectStatus);
-        textRobotStatus = (TextView) findViewById(R.id.textRobotStatus);
-        textOpMode = (TextView) findViewById(R.id.textOpMode);
-        textErrorMessage = (TextView) findViewById(R.id.textErrorMessage);
-        textGamepad[0] = (TextView) findViewById(R.id.textGamepad1);
-        textGamepad[1] = (TextView) findViewById(R.id.textGamepad2);
-        immersion = new ImmersiveMode(getWindow().getDecorView());
-        dimmer = new Dimmer(this);
-        dimmer.longBright();
-        Restarter restarter = new RobotRestarter();
+   protected class RobotRestarter implements Restarter
+   {
 
-        updateUI = new UpdateUI(this, dimmer);
-        updateUI.setRestarter(restarter);
-        updateUI.setTextViews(textWifiDirectStatus, textRobotStatus,
-                textGamepad, textOpMode, textErrorMessage, textDeviceName);
-        callback = updateUI.new Callback();
+      public void requestRestart()
+      {
+         requestRobotRestart();
+      }
 
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+   }
 
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        mOpenCvCameraView.setCvCameraViewListener(this);
+   protected ServiceConnection connection = new ServiceConnection()
+   {
+      @Override
+      public void onServiceConnected(ComponentName name, IBinder service)
+      {
+         FtcRobotControllerBinder binder = (FtcRobotControllerBinder) service;
+         onServiceBind(binder.getService());
+      }
 
-        hittingMenuButtonBrightensScreen();
+      @Override
+      public void onServiceDisconnected(ComponentName name)
+      {
+         controllerService = null;
+      }
+   };
 
-        if (USE_DEVICE_EMULATION) {
-            HardwareFactory.enableDeviceEmulation();
-        }
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-    }
+   @Override
+   protected void onNewIntent(Intent intent)
+   {
+      super.onNewIntent(intent);
+      if(UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(intent.getAction()))
+      {
+         // a new USB device has been attached
+         DbgLog.msg("USB Device attached; app restart may be needed");
+      }
+   }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
+   @Override
+   protected void onCreate(Bundle savedInstanceState)
+   {
+      super.onCreate(savedInstanceState);
 
-        // save 4MB of logcat to the SD card
-        RobotLog.writeLogcatToDisk(this, 4 * 1024);
+      setContentView(R.layout.activity_ftc_controller);
 
-        Intent intent = new Intent(this, FtcRobotControllerService.class);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+      utility = new Utility(this);
+      context = this;
+      entireScreenLayout = (LinearLayout) findViewById(R.id.entire_screen);
+      buttonMenu = (ImageButton) findViewById(R.id.menu_buttons);
+      buttonMenu.setOnClickListener(new View.OnClickListener()
+      {
+         @Override
+         public void onClick(View v)
+         {
+            openOptionsMenu();
+         }
+      });
 
-        utility.updateHeader(Utility.NO_FILE, R.string.pref_hardware_config_filename, R.id.active_filename, R.id.included_header);
+      textDeviceName = (TextView) findViewById(R.id.textDeviceName);
+      textWifiDirectStatus = (TextView) findViewById(R.id.textWifiDirectStatus);
+      textRobotStatus = (TextView) findViewById(R.id.textRobotStatus);
+      textOpMode = (TextView) findViewById(R.id.textOpMode);
+      textErrorMessage = (TextView) findViewById(R.id.textErrorMessage);
+      textGamepad[0] = (TextView) findViewById(R.id.textGamepad1);
+      textGamepad[1] = (TextView) findViewById(R.id.textGamepad2);
+      immersion = new ImmersiveMode(getWindow().getDecorView());
+      dimmer = new Dimmer(this);
+      dimmer.longBright();
+      Restarter restarter = new RobotRestarter();
 
-        callback.wifiDirectUpdate(WifiDirectAssistant.Event.DISCONNECTED);
+      updateUI = new UpdateUI(this, dimmer);
+      updateUI.setRestarter(restarter);
+      updateUI.setTextViews(textWifiDirectStatus, textRobotStatus,
+            textGamepad, textOpMode, textErrorMessage, textDeviceName);
+      callback = updateUI.new Callback();
 
-        entireScreenLayout.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                dimmer.handleDimTimer();
-                return false;
-            }
-        });
+      PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+      preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "FtcRobotController Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app deep link URI is correct.
-                Uri.parse("android-app://com.qualcomm.ftcrobotcontroller/http/host/path")
-        );
-        AppIndex.AppIndexApi.start(client, viewAction);
-    }
+      mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
+      mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+      mOpenCvCameraView.setCvCameraViewListener(this);
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (!OpenCVLoader.initDebug()) {
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
-        } else {
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-        }
-    }
+      hittingMenuButtonBrightensScreen();
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
+      if(USE_DEVICE_EMULATION)
+      {
+         HardwareFactory.enableDeviceEmulation();
+      }
+      // ATTENTION: This was auto-generated to implement the App Indexing API.
+      // See https://g.co/AppIndexing/AndroidStudio for more information.
+      client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+   }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
+   @Override
+   protected void onStart()
+   {
+      super.onStart();
+      // ATTENTION: This was auto-generated to implement the App Indexing API.
+      // See https://g.co/AppIndexing/AndroidStudio for more information.
+      client.connect();
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "FtcRobotController Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app deep link URI is correct.
-                Uri.parse("android-app://com.qualcomm.ftcrobotcontroller/http/host/path")
-        );
-        AppIndex.AppIndexApi.end(client, viewAction);
+      // save 4MB of logcat to the SD card
+      RobotLog.writeLogcatToDisk(this, 4 * 1024);
 
-        if (controllerService != null) unbindService(connection);
+      Intent intent = new Intent(this, FtcRobotControllerService.class);
+      bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
-        RobotLog.cancelWriteLogcatToDisk(this);
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.disconnect();
-    }
+      utility.updateHeader(Utility.NO_FILE, R.string.pref_hardware_config_filename, R.id.active_filename, R.id.included_header);
 
-    public void onCameraViewStarted(int width, int height) {
-        mRgba = new Mat(height, width, CvType.CV_8UC4);
-        mDetector = new ColorBlobDetector();
-        mSpectrum = new Mat();
-        mBlobColorRgba = new Scalar(255);
-        mBlobColorHsv = new Scalar(255);
-        SPECTRUM_SIZE = new Size(100, 35);
-        CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
-    }
+      callback.wifiDirectUpdate(WifiDirectAssistant.Event.DISCONNECTED);
 
-    public void onCameraViewStopped() {
-        mRgba.release();
-    }
+      entireScreenLayout.setOnTouchListener(new OnTouchListener()
+      {
+         @Override
+         public boolean onTouch(View v, MotionEvent event)
+         {
+            dimmer.handleDimTimer();
+            return false;
+         }
+      });
 
-    public boolean onTouch(View v, MotionEvent event)
-    {
-        int cols = mRgba.cols();
-        int rows = mRgba.rows();
+      // ATTENTION: This was auto-generated to implement the App Indexing API.
+      // See https://g.co/AppIndexing/AndroidStudio for more information.
+      Action viewAction = Action.newAction(
+            Action.TYPE_VIEW, // TODO: choose an action type.
+            "FtcRobotController Page", // TODO: Define a title for the content shown.
+            // TODO: If you have web page content that matches this app activity's content,
+            // make sure this auto-generated web page URL is correct.
+            // Otherwise, set the URL to null.
+            Uri.parse("http://host/path"),
+            // TODO: Make sure this auto-generated app deep link URI is correct.
+            Uri.parse("android-app://com.qualcomm.ftcrobotcontroller/http/host/path")
+      );
+      AppIndex.AppIndexApi.start(client, viewAction);
+   }
 
-        //Get a handle to the robot vision global variable
-        RobotVision g = (RobotVision) getApplication();
+   @Override
+   protected void onResume()
+   {
+      super.onResume();
+      if(!OpenCVLoader.initDebug())
+      {
+         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+      }else
+      {
+         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+      }
+   }
 
-        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
-        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+   @Override
+   public void onDestroy()
+   {
+      super.onDestroy();
+      if(mOpenCvCameraView != null)
+         mOpenCvCameraView.disableView();
+   }
 
-        int x = (int) event.getX() - xOffset;
-        int y = (int) event.getY() - yOffset;
+   @Override
+   public void onPause()
+   {
+      super.onPause();
+      if(mOpenCvCameraView != null)
+         mOpenCvCameraView.disableView();
+   }
 
-        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+   @Override
+   protected void onStop()
+   {
+      super.onStop();
+      // ATTENTION: This was auto-generated to implement the App Indexing API.
+      // See https://g.co/AppIndexing/AndroidStudio for more information.
+      Action viewAction = Action.newAction(
+            Action.TYPE_VIEW, // TODO: choose an action type.
+            "FtcRobotController Page", // TODO: Define a title for the content shown.
+            // TODO: If you have web page content that matches this app activity's content,
+            // make sure this auto-generated web page URL is correct.
+            // Otherwise, set the URL to null.
+            Uri.parse("http://host/path"),
+            // TODO: Make sure this auto-generated app deep link URI is correct.
+            Uri.parse("android-app://com.qualcomm.ftcrobotcontroller/http/host/path")
+      );
+      AppIndex.AppIndexApi.end(client, viewAction);
 
-        Rect touchedRect = new Rect();
+      if(controllerService != null) unbindService(connection);
 
-        touchedRect.x = (x > 4) ? x - 4 : 0;
-        touchedRect.y = (y > 4) ? y - 4 : 0;
+      RobotLog.cancelWriteLogcatToDisk(this);
+      // ATTENTION: This was auto-generated to implement the App Indexing API.
+      // See https://g.co/AppIndexing/AndroidStudio for more information.
+      client.disconnect();
+   }
 
-        touchedRect.width = (x + 4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
-        touchedRect.height = (y + 4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
+   public void onCameraViewStarted(int width, int height)
+   {
+      mRgba = new Mat(height, width, CvType.CV_8UC4);
+      mDetector = new ColorBlobDetector();
+      mSpectrum = new Mat();
+      mBlobColorRgba = new Scalar(255);
+      mBlobColorHsv = new Scalar(255);
+      SPECTRUM_SIZE = new Size(100, 35);
+      CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
+   }
 
-        mIsColorSelected = true;
+   public void onCameraViewStopped()
+   {
+      mRgba.release();
+   }
 
-        /*------------------------------------------------------------------------------------------
-         * Store the Set the object tracker to the initialization state. On the next camera frame event this
-         * state will be entered.
-         *----------------------------------------------------------------------------------------*/
-        g.setObjectTrackingRect( touchedRect);
-        g.setObjectTrackState( RobotVision.State.OBJECT_TRACK_INIT);
+   public boolean onTouch(View v, MotionEvent event)
+   {
+      int cols = mRgba.cols();
+      int rows = mRgba.rows();
 
-        return false; // don't need subsequent touch events
-    }
+      //Get a handle to the robot vision global variable
+      RobotVision g = (RobotVision) getApplication();
 
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame)
-    {
-        mRgba = inputFrame.rgba();
+      int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
+      int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 
-        //Get a handle to the robot vision global variable
-        RobotVision g = (RobotVision) getApplication();
+      int x = (int) event.getX() - xOffset;
+      int y = (int) event.getY() - yOffset;
+
+      if((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+
+      Rect touchedRect = new Rect();
+
+      touchedRect.x = (x > 8) ? x - 8 : 0;
+      touchedRect.y = (y > 8) ? y - 8 : 0;
+
+      touchedRect.width = (x + 8 < cols) ? x + 8 - touchedRect.x : cols - touchedRect.x;
+      touchedRect.height = (y + 8 < rows) ? y + 8 - touchedRect.y : rows - touchedRect.y;
+
+      mIsColorSelected = true;
+
+      /*--------------------------------------------------------------------------------------------
+       * Set the object tracker to the initialization state. On the next camera frame event this
+       * state will be entered.
+       *------------------------------------------------------------------------------------------*/
+      g.setObjectTrackInitRect(touchedRect);
+      g.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
+
+      return false; // don't need subsequent touch events
+   }
+
+   public Mat onCameraFrame(CvCameraViewFrame inputFrame)
+   {
+      mRgba = inputFrame.rgba();
+
+      //Get a handle to the robot vision global variable
+      RobotVision g = (RobotVision) getApplication();
 
         /*------------------------------------------------------------------------------------------
          * Track the color, coordinates, and area of the selected object.
          *----------------------------------------------------------------------------------------*/
-        g.updateObjectTrack( mDetector,
-                             inputFrame,
-                             mSpectrum,
-                             SPECTRUM_SIZE);
+      mDetector = g.updateObjectTrack( mDetector,
+                                       inputFrame,
+                                       mSpectrum,
+                                       SPECTRUM_SIZE);
 
-        if( g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)
-        {
+      if(g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)
+      {
+         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+         List<List<Double>> blobs = g.getBlobs();
 
-            List<List<Double>> blobs = g.getBlobs();
+         Double area;
+         int x;
+         int y;
+         int width;
+         int height;
 
-            Double area;
-            int x;
-            int y;
-            int width;
-            int height;
+         //Plot the blob locations
+         for(int i = 0; i < blobs.size(); i++)
+         {
+            //Scalar blobColor = g.getBlobColor(blobs.get(i));
+            x = blobs.get(i).get(1).intValue();
+            y = blobs.get(i).get(3).intValue();
+            width = blobs.get(i).get(4).intValue();
+            height = blobs.get(i).get(5).intValue();
+            Imgproc.rectangle(mRgba, new Point(x, y), new Point(x + width, y + height), new Scalar(0, 255, 0, 255), 3);
+            x = x + width / 2;
+            y = y + height / 2;
+            area = blobs.get(i).get(6);
 
-            //Plot the blob locations
-            for (int i = 0; i < blobs.size(); i++) {
-                //Scalar blobColor = g.getBlobColor(blobs.get(i));
-                x = blobs.get(i).get(1).intValue();
-                y = blobs.get(i).get(3).intValue();
-                width = blobs.get(i).get(4).intValue();
-                height = blobs.get(i).get(5).intValue();
-                Imgproc.rectangle(mRgba, new Point(x, y), new Point(x + width, y + height), new Scalar(0, 255, 0, 255), 3);
-                x = x + width / 2;
-                y = y + height / 2;
-                area = blobs.get(i).get(6);
+            Imgproc.putText(mRgba, "[" + blobs.get(i).get(0).intValue() + "," + blobs.get(i).get(2).intValue() + "," + area.intValue() + "]", new Point(x + 4, y), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
+            Imgproc.circle(mRgba, new Point(x, y), 5, new Scalar(0, 255, 0, 255), -1);
+         }
 
-                Imgproc.putText(mRgba, "[" + blobs.get(i).get(0).intValue() + "," + blobs.get(i).get(2).intValue() + "," + area.intValue() + "]", new Point(x + 4, y), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
-                Imgproc.circle(mRgba, new Point(x, y), 5, new Scalar(0, 255, 0, 255), -1);
+         Rect rec = g.getObjectTrackingRect();
+
+         Imgproc.rectangle(mRgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
+
+         Mat colorLabel = mRgba.submat(4, 40, 4, 40);
+         colorLabel.setTo(g.getObjectColorRgb());
+
+         Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
+         mSpectrum.copyTo(spectrumLabel);
+
+      }/*End if( g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)*/
+
+      return mRgba;
+   }
+
+   private Scalar converScalarHsv2Rgba(Scalar hsvColor)
+   {
+      Mat pointMatRgba = new Mat();
+      Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
+      Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+
+      return new Scalar(pointMatRgba.get(0, 0));
+   }
+
+   @Override
+   public void onWindowFocusChanged(boolean hasFocus)
+   {
+      super.onWindowFocusChanged(hasFocus);
+      // When the window loses focus (e.g., the action overflow is shown),
+      // cancel any pending hide action. When the window gains focus,
+      // hide the system UI.
+      if(hasFocus)
+      {
+         if(ImmersiveMode.apiOver19())
+         {
+            // Immersive flag only works on API 19 and above.
+            immersion.hideSystemUI();
+         }
+      }else
+      {
+         immersion.cancelSystemUIHide();
+      }
+   }
+
+
+   @Override
+   public boolean onCreateOptionsMenu(Menu menu)
+   {
+      getMenuInflater().inflate(R.menu.ftc_robot_controller, menu);
+      return true;
+   }
+
+   @Override
+   public boolean onOptionsItemSelected(MenuItem item)
+   {
+      switch(item.getItemId())
+      {
+         case R.id.action_restart_robot:
+            dimmer.handleDimTimer();
+            Toast.makeText(context, "Restarting Robot", Toast.LENGTH_SHORT).show();
+            requestRobotRestart();
+            return true;
+         case R.id.action_settings:
+            // The string to launch this activity must match what's in AndroidManifest of FtcCommon for this activity.
+            Intent settingsIntent = new Intent("com.qualcomm.ftccommon.FtcRobotControllerSettingsActivity.intent.action.Launch");
+            startActivityForResult(settingsIntent, LaunchActivityConstantsList.FTC_ROBOT_CONTROLLER_ACTIVITY_CONFIGURE_ROBOT);
+            return true;
+         case R.id.action_about:
+            // The string to launch this activity must match what's in AndroidManifest of FtcCommon for this activity.
+            Intent intent = new Intent("com.qualcomm.ftccommon.configuration.AboutActivity.intent.action.Launch");
+            startActivity(intent);
+            return true;
+         case R.id.action_exit_app:
+            finish();
+            return true;
+         case R.id.action_view_logs:
+            // The string to launch this activity must match what's in AndroidManifest of FtcCommon for this activity.
+            Intent viewLogsIntent = new Intent("com.qualcomm.ftccommon.ViewLogsActivity.intent.action.Launch");
+            viewLogsIntent.putExtra(LaunchActivityConstantsList.VIEW_LOGS_ACTIVITY_FILENAME, RobotLog.getLogFilename(this));
+            startActivity(viewLogsIntent);
+            return true;
+         default:
+            return super.onOptionsItemSelected(item);
+      }
+   }
+
+   @Override
+   public void onConfigurationChanged(Configuration newConfig)
+   {
+      super.onConfigurationChanged(newConfig);
+      // don't destroy assets on screen rotation
+   }
+
+   @Override
+   protected void onActivityResult(int request, int result, Intent intent)
+   {
+      if(request == REQUEST_CONFIG_WIFI_CHANNEL)
+      {
+         if(result == RESULT_OK)
+         {
+            Toast toast = Toast.makeText(context, "Configuration Complete", Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            showToast(toast);
+         }
+      }
+      if(request == LaunchActivityConstantsList.FTC_ROBOT_CONTROLLER_ACTIVITY_CONFIGURE_ROBOT)
+      {
+         if(result == RESULT_OK)
+         {
+            Serializable extra = intent.getSerializableExtra(FtcRobotControllerActivity.CONFIGURE_FILENAME);
+            if(extra != null)
+            {
+               utility.saveToPreferences(extra.toString(), R.string.pref_hardware_config_filename);
+               utility.updateHeader(Utility.NO_FILE, R.string.pref_hardware_config_filename, R.id.active_filename, R.id.included_header);
             }
+         }
+      }
+   }
 
-            Mat colorLabel = mRgba.submat(4, 40, 4, 40);
-            colorLabel.setTo(g.getObjectColorRgb());
+   public void onServiceBind(FtcRobotControllerService service)
+   {
+      DbgLog.msg("Bound to Ftc Controller Service");
+      controllerService = service;
+      updateUI.setControllerService(controllerService);
 
-            Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
-            mSpectrum.copyTo(spectrumLabel);
+      callback.wifiDirectUpdate(controllerService.getWifiDirectStatus());
+      callback.robotUpdate(controllerService.getRobotStatus());
+      requestRobotSetup();
+   }
 
-        }/*End if( g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)*/
+   private void requestRobotSetup()
+   {
+      if(controllerService == null) return;
 
-        return mRgba;
-    }
+      FileInputStream fis = fileSetup();
+      // if we can't find the file, don't try and build the robot.
+      if(fis == null)
+      {
+         return;
+      }
 
-    private Scalar converScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+      HardwareFactory factory;
 
-        return new Scalar(pointMatRgba.get(0, 0));
-    }
+      // Modern Robotics Factory for use with Modern Robotics hardware
+      HardwareFactory modernRoboticsFactory = new HardwareFactory(context);
+      modernRoboticsFactory.setXmlInputStream(fis);
+      factory = modernRoboticsFactory;
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        // When the window loses focus (e.g., the action overflow is shown),
-        // cancel any pending hide action. When the window gains focus,
-        // hide the system UI.
-        if (hasFocus) {
-            if (ImmersiveMode.apiOver19()) {
-                // Immersive flag only works on API 19 and above.
-                immersion.hideSystemUI();
-            }
-        } else {
-            immersion.cancelSystemUIHide();
-        }
-    }
+      eventLoop = new FtcEventLoop(factory, new FtcOpModeRegister(), callback, this);
 
+      controllerService.setCallback(callback);
+      controllerService.setupRobot(eventLoop);
+   }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.ftc_robot_controller, menu);
-        return true;
-    }
+   private FileInputStream fileSetup()
+   {
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_restart_robot:
-                dimmer.handleDimTimer();
-                Toast.makeText(context, "Restarting Robot", Toast.LENGTH_SHORT).show();
-                requestRobotRestart();
-                return true;
-            case R.id.action_settings:
-                // The string to launch this activity must match what's in AndroidManifest of FtcCommon for this activity.
-                Intent settingsIntent = new Intent("com.qualcomm.ftccommon.FtcRobotControllerSettingsActivity.intent.action.Launch");
-                startActivityForResult(settingsIntent, LaunchActivityConstantsList.FTC_ROBOT_CONTROLLER_ACTIVITY_CONFIGURE_ROBOT);
-                return true;
-            case R.id.action_about:
-                // The string to launch this activity must match what's in AndroidManifest of FtcCommon for this activity.
-                Intent intent = new Intent("com.qualcomm.ftccommon.configuration.AboutActivity.intent.action.Launch");
-                startActivity(intent);
-                return true;
-            case R.id.action_exit_app:
-                finish();
-                return true;
-            case R.id.action_view_logs:
-                // The string to launch this activity must match what's in AndroidManifest of FtcCommon for this activity.
-                Intent viewLogsIntent = new Intent("com.qualcomm.ftccommon.ViewLogsActivity.intent.action.Launch");
-                viewLogsIntent.putExtra(LaunchActivityConstantsList.VIEW_LOGS_ACTIVITY_FILENAME, RobotLog.getLogFilename(this));
-                startActivity(viewLogsIntent);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
+      final String filename = Utility.CONFIG_FILES_DIR
+            + utility.getFilenameFromPrefs(R.string.pref_hardware_config_filename, Utility.NO_FILE) + Utility.FILE_EXT;
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // don't destroy assets on screen rotation
-    }
+      FileInputStream fis;
+      try
+      {
+         fis = new FileInputStream(filename);
+      }
+      catch(FileNotFoundException e)
+      {
+         String msg = "Cannot open robot configuration file - " + filename;
+         utility.complainToast(msg, context);
+         DbgLog.msg(msg);
+         utility.saveToPreferences(Utility.NO_FILE, R.string.pref_hardware_config_filename);
+         fis = null;
+      }
+      utility.updateHeader(Utility.NO_FILE, R.string.pref_hardware_config_filename, R.id.active_filename, R.id.included_header);
+      return fis;
+   }
 
-    @Override
-    protected void onActivityResult(int request, int result, Intent intent) {
-        if (request == REQUEST_CONFIG_WIFI_CHANNEL) {
-            if (result == RESULT_OK) {
-                Toast toast = Toast.makeText(context, "Configuration Complete", Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                showToast(toast);
-            }
-        }
-        if (request == LaunchActivityConstantsList.FTC_ROBOT_CONTROLLER_ACTIVITY_CONFIGURE_ROBOT) {
-            if (result == RESULT_OK) {
-                Serializable extra = intent.getSerializableExtra(FtcRobotControllerActivity.CONFIGURE_FILENAME);
-                if (extra != null) {
-                    utility.saveToPreferences(extra.toString(), R.string.pref_hardware_config_filename);
-                    utility.updateHeader(Utility.NO_FILE, R.string.pref_hardware_config_filename, R.id.active_filename, R.id.included_header);
-                }
-            }
-        }
-    }
+   private void requestRobotShutdown()
+   {
+      if(controllerService == null) return;
+      controllerService.shutdownRobot();
+   }
 
-    public void onServiceBind(FtcRobotControllerService service) {
-        DbgLog.msg("Bound to Ftc Controller Service");
-        controllerService = service;
-        updateUI.setControllerService(controllerService);
+   private void requestRobotRestart()
+   {
+      requestRobotShutdown();
+      requestRobotSetup();
+   }
 
-        callback.wifiDirectUpdate(controllerService.getWifiDirectStatus());
-        callback.robotUpdate(controllerService.getRobotStatus());
-        requestRobotSetup();
-    }
-
-    private void requestRobotSetup() {
-        if (controllerService == null) return;
-
-        FileInputStream fis = fileSetup();
-        // if we can't find the file, don't try and build the robot.
-        if (fis == null) {
-            return;
-        }
-
-        HardwareFactory factory;
-
-        // Modern Robotics Factory for use with Modern Robotics hardware
-        HardwareFactory modernRoboticsFactory = new HardwareFactory(context);
-        modernRoboticsFactory.setXmlInputStream(fis);
-        factory = modernRoboticsFactory;
-
-        eventLoop = new FtcEventLoop(factory, new FtcOpModeRegister(), callback, this);
-
-        controllerService.setCallback(callback);
-        controllerService.setupRobot(eventLoop);
-    }
-
-    private FileInputStream fileSetup() {
-
-        final String filename = Utility.CONFIG_FILES_DIR
-                + utility.getFilenameFromPrefs(R.string.pref_hardware_config_filename, Utility.NO_FILE) + Utility.FILE_EXT;
-
-        FileInputStream fis;
-        try {
-            fis = new FileInputStream(filename);
-        } catch (FileNotFoundException e) {
-            String msg = "Cannot open robot configuration file - " + filename;
-            utility.complainToast(msg, context);
-            DbgLog.msg(msg);
-            utility.saveToPreferences(Utility.NO_FILE, R.string.pref_hardware_config_filename);
-            fis = null;
-        }
-        utility.updateHeader(Utility.NO_FILE, R.string.pref_hardware_config_filename, R.id.active_filename, R.id.included_header);
-        return fis;
-    }
-
-    private void requestRobotShutdown() {
-        if (controllerService == null) return;
-        controllerService.shutdownRobot();
-    }
-
-    private void requestRobotRestart() {
-        requestRobotShutdown();
-        requestRobotSetup();
-    }
-
-    protected void hittingMenuButtonBrightensScreen() {
-        ActionBar actionBar = getActionBar();
-        if (actionBar != null) {
-            actionBar.addOnMenuVisibilityListener(new ActionBar.OnMenuVisibilityListener() {
-                @Override
-                public void onMenuVisibilityChanged(boolean isVisible) {
-                    if (isVisible) {
-                        dimmer.handleDimTimer();
-                    }
-                }
-            });
-        }
-    }
-
-    public void showToast(final Toast toast) {
-        runOnUiThread(new Runnable() {
+   protected void hittingMenuButtonBrightensScreen()
+   {
+      ActionBar actionBar = getActionBar();
+      if(actionBar != null)
+      {
+         actionBar.addOnMenuVisibilityListener(new ActionBar.OnMenuVisibilityListener()
+         {
             @Override
-            public void run() {
-                toast.show();
+            public void onMenuVisibilityChanged(boolean isVisible)
+            {
+               if(isVisible)
+               {
+                  dimmer.handleDimTimer();
+               }
             }
-        });
-    }
+         });
+      }
+   }
+
+   public void showToast(final Toast toast)
+   {
+      runOnUiThread(new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            toast.show();
+         }
+      });
+   }
 }
