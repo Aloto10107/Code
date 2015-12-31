@@ -1,6 +1,7 @@
 package com.qualcomm.ftcrobotcontroller;
 
 import android.app.Application;
+import android.util.Log;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.core.Core;
@@ -37,6 +38,11 @@ public class RobotVision extends Application
    private long prevNanoTime;
    private ColorBlobDetector mDetector;
    private KalmanFilter kalman;
+   private Mat kalmanTransMatrix;
+   private Mat kalmanProcNoiseCov;
+   private Mat kalmanMeasNoiseCov;
+   private Mat kalmanMeas;
+
    public enum State
    {
       OBJECT_TRACK_INIT, OBJECT_TRACK, OBJECT_LOST, OBJECT_IDLE
@@ -46,7 +52,68 @@ public class RobotVision extends Application
 
    public void RobotVisionInit()
    {
-      kalman    = new KalmanFilter(4, 2, 0, CvType.CV_32F);
+      /*--------------------------------------------------------------------------------------------
+       * Declare a 4 state kalman filter where state 0 = x, state 1 = y, state 2 = x', and state 3=
+       * y'.
+       *------------------------------------------------------------------------------------------*/
+      kalman             = new KalmanFilter(4, 2, 0, CvType.CV_32F);
+      kalmanTransMatrix  = new Mat(4, 4, CvType.CV_32F, new Scalar(0));
+      kalmanProcNoiseCov = new Mat(4, 4, CvType.CV_32F, new Scalar(0));
+      kalmanMeasNoiseCov = new Mat(2, 2, CvType.CV_32F, new Scalar(0));
+      kalmanMeas         = new Mat(2, 1, CvType.CV_32F, new Scalar(0));
+
+      /*--------------------------------------------------------------------------------------------
+       * Initialize the state transition matrix...dt isn't known yet so set the value later.
+       *                     | 1  0  dt  0  |
+       * kalmanTransMatrix = | 0  1   0  dt |
+       *                     | 0  0   1  0  |
+       *                     | 0  0   0  1  |
+       *------------------------------------------------------------------------------------------*/
+      kalmanTransMatrix.put(0,0, 1.0);
+      kalmanTransMatrix.put(0,1, 0.0);
+      kalmanTransMatrix.put(0,2, 1.0); //dt place holder
+      kalmanTransMatrix.put(0,3, 0.0);
+
+      kalmanTransMatrix.put(1,0, 0.0);
+      kalmanTransMatrix.put(1,1, 1.0);
+      kalmanTransMatrix.put(1,2, 0.0);
+      kalmanTransMatrix.put(1,3, 1.0); //dt place holder
+
+      kalmanTransMatrix.put(2,0, 0.0);
+      kalmanTransMatrix.put(2,1, 0.0);
+      kalmanTransMatrix.put(2,2, 1.0);
+      kalmanTransMatrix.put(2,3, 0.0);
+
+      kalmanTransMatrix.put(3,0, 0.0);
+      kalmanTransMatrix.put(3,1, 0.0);
+      kalmanTransMatrix.put(3,2, 0.0);
+      kalmanTransMatrix.put(3,3, 1.0);
+      kalman.set_transitionMatrix(kalmanTransMatrix);
+
+      /*--------------------------------------------------------------------------------------------
+       * Kalman filter H matrix
+       *------------------------------------------------------------------------------------------*/
+      Mat meas         = kalman.get_measurementMatrix();
+      Mat procNoiseCov = kalman.get_processNoiseCov();
+      Mat measNoiseCov = kalman.get_measurementNoiseCov();
+      Mat errorCovPost = kalman.get_errorCovPost();
+
+      /*--------------------------------------------------------------------------------------------
+       * Observing the measurements directly so the H matrix is the identity.
+       *------------------------------------------------------------------------------------------*/
+      Core.setIdentity( meas);
+      Core.setIdentity( kalmanProcNoiseCov, Scalar.all(1e-4));
+      Core.setIdentity( kalmanMeasNoiseCov, Scalar.all(1e-1));
+      /*--------------------------------------------------------------------------------------------
+       * We have known starting coordinates so set this value high.
+       *------------------------------------------------------------------------------------------*/
+      Core.setIdentity( errorCovPost, Scalar.all(1));
+
+      kalman.set_measurementMatrix(meas);
+      kalman.set_processNoiseCov(kalmanProcNoiseCov);
+      kalman.set_measurementNoiseCov(kalmanMeasNoiseCov);
+      kalman.set_errorCovPost(errorCovPost);
+
       mDetector = new ColorBlobDetector();
 
       this.blobs = new ArrayList<List<Double>>();
@@ -244,6 +311,45 @@ public class RobotVision extends Application
                   this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) - rows);
                else
                   this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR;
+
+               Log.d("robotVisionTag", "This is my message");
+
+               /*-----------------------------------------------------------------------------------
+                * Initialize the Kalman filter to the center coordinates of the object.
+                *---------------------------------------------------------------------------------*/
+               Mat statePred = kalman.get_statePre();
+               statePred.put(0, 0, (double) x + (double) width / 2);
+               statePred.put(0, 0, (double) y + (double) height / 2);
+               kalman.set_statePre(statePred);
+
+               /*-----------------------------------------------------------------------------------
+                * Update transition matrix dt
+                *---------------------------------------------------------------------------------*/
+               kalmanTransMatrix.put(0,2, deltaTimeSec);
+               kalmanTransMatrix.put(1,3, deltaTimeSec);
+               kalman.set_transitionMatrix(kalmanTransMatrix);
+
+               double[][] trans = new double[4][4];
+
+               trans[0][0] = kalmanTransMatrix.get(0,0)[0];
+               trans[0][1] = kalmanTransMatrix.get(0,1)[0];
+               trans[0][2] = kalmanTransMatrix.get(0,2)[0];
+               trans[0][3] = kalmanTransMatrix.get(0,3)[0];
+
+               trans[1][0] = kalmanTransMatrix.get(1,0)[0];
+               trans[1][1] = kalmanTransMatrix.get(1,1)[0];
+               trans[1][2] = kalmanTransMatrix.get(1,2)[0];
+               trans[1][3] = kalmanTransMatrix.get(1,3)[0];
+
+               trans[2][0] = kalmanTransMatrix.get(2,0)[0];
+               trans[2][1] = kalmanTransMatrix.get(2,1)[0];
+               trans[2][2] = kalmanTransMatrix.get(2,2)[0];
+               trans[2][3] = kalmanTransMatrix.get(2,3)[0];
+
+               trans[3][0] = kalmanTransMatrix.get(3,0)[0];
+               trans[3][1] = kalmanTransMatrix.get(3,1)[0];
+               trans[3][2] = kalmanTransMatrix.get(3,2)[0];
+               trans[3][3] = kalmanTransMatrix.get(3,3)[0];
 
                this.objectTrackState = State.OBJECT_TRACK;
             }
