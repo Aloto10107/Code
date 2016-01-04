@@ -33,32 +33,43 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.IrSeekerSensor;
+import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
- * TeleOp Mode
+ * Example autonomous program.
  * <p>
- * Enables control of the robot via the gamepad
+ * This example program uses elapsed time to determine how to move the robot.
+ * The OpMode.java class has some class members that provide time information
+ * for the current op mode.
+ * The public member variable 'time' is updated before each call to the run() event.
+ * The method getRunTime() returns the time that has elapsed since the op mode
+ * starting running to when the method was called.
  */
-public class K9IrSeeker extends OpMode {
-	
+public class K9AutoTime extends OpMode {
+
 	final static double MOTOR_POWER = 0.15; // Higher values will cause the robot to move faster
-	final static double HOLD_IR_SIGNAL_STRENGTH = 0.50; // Higher values will cause the robot to follow closer
+	final static double HOLD_IR_SIGNAL_STRENGTH = 0.20; // Higher values will cause the robot to follow closer
+	final static double LIGHT_THRESHOLD = 0.5;
 
-	double armPosition;
-	double clawPosition;
+	//double armPosition;
+//	double clawPosition;
 
-	DcMotor motorRight;
-	DcMotor motorLeft;
-	Servo claw;
-	Servo arm;
-	IrSeekerSensor irSeeker;
-	
+
+	DcMotor FrontmotorRight;
+	DcMotor FrontmotorLeft;
+	DcMotor BackmotorRight;
+	DcMotor BackmotorLeft;
+	DcMotor TheThirdWheel;
+
+	//Servo claw;
+	//Servo arm;
+	//LightSensor reflectedLight;
+
 	/**
 	 * Constructor
 	 */
-	public K9IrSeeker() {
+	public K9AutoTime() {
 
 	}
 
@@ -80,28 +91,39 @@ public class K9IrSeeker extends OpMode {
 		 * For the demo Tetrix K9 bot we assume the following,
 		 *   There are two motors "motor_1" and "motor_2"
 		 *   "motor_1" is on the right side of the bot.
-		 *   "motor_2" is on the left side of the bot.
+		 *   "motor_2" is on the left side of the bot..
 		 *   
 		 * We also assume that there are two servos "servo_1" and "servo_6"
 		 *    "servo_1" controls the arm joint of the manipulator.
 		 *    "servo_6" controls the claw joint of the manipulator.
 		 */
-		motorRight = hardwareMap.dcMotor.get("motor_2");
-		motorLeft = hardwareMap.dcMotor.get("motor_1");
-		motorLeft.setDirection(DcMotor.Direction.REVERSE);
-		
-		arm = hardwareMap.servo.get("servo_1");
-		claw = hardwareMap.servo.get("servo_6");
+
+		FrontmotorRight = hardwareMap.dcMotor.get("motor_fr");
+		FrontmotorLeft = hardwareMap.dcMotor.get("motor_fl");
+		BackmotorRight = hardwareMap.dcMotor.get("motor_br");
+		BackmotorLeft = hardwareMap.dcMotor.get("motor_bl");
+		TheThirdWheel = hardwareMap.dcMotor.get("third_wheel");
+
+		//FrontmotorLeft.setDirection(DcMotor.Direction.REVERSE);
+		//BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
+		BackmotorRight.setDirection(DcMotor.Direction.REVERSE);
+		FrontmotorRight.setDirection(DcMotor.Direction.REVERSE);
+		TheThirdWheel.setDirection(DcMotor.Direction.REVERSE);
+		//arm = hardwareMap.servo.get("servo_1");
+		//claw = hardwareMap.servo.get("servo_6");
 
 		// set the starting position of the wrist and claw
-		armPosition = 0.1;
-		clawPosition = 0.25;
+		//armPosition = 0.4;
+		//clawPosition = 0.25;
 
 		/*
-		 * We also assume that we have a Hitechnic IR Seeker v2 sensor
-		 * with a name of "ir_seeker" configured for our robot.
+		 * We also assume that we have a LEGO light sensor
+		 * with a name of "light_sensor" configured for our robot.
 		 */
-		irSeeker = hardwareMap.irSeekerSensor.get("ir_seeker");
+		//reflectedLight = hardwareMap.lightSensor.get("light_sensor");
+
+        // turn on LED of light sensor.
+       // reflectedLight.enableLed(true);
 	}
 
 	/*
@@ -111,81 +133,57 @@ public class K9IrSeeker extends OpMode {
 	 */
 	@Override
 	public void loop() {
-		double angle = 0.0;
-		double strength = 0.0;
+		//double reflection = 0.0;
 		double left, right = 0.0;
 		
 		// keep manipulator out of the way.
-		arm.setPosition(armPosition);
-		claw.setPosition(clawPosition);
-	
-		/*
-		 * Do we detect an IR signal?
-		 */
-		if (irSeeker.signalDetected())  {
-			/*
-			 * Signal was detected. Follow it.
-			 */
-			
-			/*
-			 * Get angle and strength of the signal.
-			 * Note an angle of zero implies straight ahead.
-			 * A negative angle implies that the source is to the left.
-			 * A positive angle implies that the source is to the right.
-			 */
-			angle = irSeeker.getAngle();
-			strength = irSeeker.getStrength();
+		//arm.setPosition(armPosition);
+		//claw.setPosition(clawPosition);
 
-            if (angle < -60)  {
-                /*
-                 * IR source is to the way left.
-                 * Point turn to the left.
-                 */
-                left = -MOTOR_POWER;
-                right = MOTOR_POWER;
 
-            } else if (angle < -5) {
-                // turn to the left and move forward.
-                left = MOTOR_POWER - 0.05;
-                right = MOTOR_POWER;
-            } else if (angle > 5 && angle < 60) {
-                // turn to the right and move forward.
-                left = MOTOR_POWER;
-                right = MOTOR_POWER - 0.05;
-            } else if (angle > 60) {
-                // point turn to right.
-                left = MOTOR_POWER;
-                right = -MOTOR_POWER;
-            } else if (strength < HOLD_IR_SIGNAL_STRENGTH) {
-				/*
-				 * Signal is dead ahead but weak.
-				 * Move forward towards signal
-				 */
-				left = MOTOR_POWER;
-				right = MOTOR_POWER;
-			} else {
-				/*
-				 * Signal is dead ahead and strong.
-				 * Stop motors.
-				 */
-				left = 0.0;
-				right = 0.0;
-			}
-		} else {
-			/*
-			 * Signal was not detected.
-			 * Shut off motors
-			 */
-			left = 0.0;
-			right = 0.0;
-		}
-		
+        /*
+         * Use the 'time' variable of this op mode to determine
+         * how to adjust the motor power.
+         */
+        if (this.time <= 3.5) {
+            // from 0 to 1 seconds, run the motors for five seconds.
+            left = 0.5;
+            right = 0.5;
+       }
+      // else if (this.time > 2 && this.time <= 6) {
+            // between 5 and 8.5 seconds, point turn right.
+        //    left = 0.15;
+         //   right = -0.15;
+		//} //else if (this.time > 8.5 && this.time <= 15) {
+            // between 8 and 15 seconds, idle.
+            //left = 0.0;
+            //right = 0.0;
+        //} else if (this.time > 15d && this.time <= 20.75d) {
+            // between 15 and 20.75 seconds, point turn left.
+            //left = -0.15;
+           // right = 0.15;
+		else {
+            // after 20.75 seconds, stop.
+            left = 0.0;
+            right = 0.0;
+        }
+
 		/*
 		 * set the motor power
 		 */
-		motorRight.setPower(right);
-		motorLeft.setPower(left);
 
+		FrontmotorRight.setPower(right);
+		BackmotorRight.setPower(right);
+		FrontmotorLeft.setPower(left);
+		BackmotorLeft.setPower(left);
+		//Sweeper.setPower(bothsweeper);
+		//TheThirdWheel.setPower(left);
+
+		/*
+		 * read the light sensor.
+		 */
+		//reflection = reflectedLight.getLightLevel();
+		
 		/*
 		 * Send telemetry data back to driver station. Note that if we are using
 		 * a legacy NXT-compatible motor controller, then the getPower() method
@@ -194,8 +192,8 @@ public class K9IrSeeker extends OpMode {
 		 */
 
 		telemetry.addData("Text", "*** Robot Data***");
-		telemetry.addData("angle", "angle:  " + Double.toString(angle));
-		telemetry.addData("strength", "sig strength: " + Double.toString(strength));
+        telemetry.addData("time", "elapsed time: " + Double.toString(this.time));
+        //telemetry.addData("reflection", "reflection:  " + Double.toString(reflection));
 		telemetry.addData("left tgt pwr",  "left  pwr: " + Double.toString(left));
 		telemetry.addData("right tgt pwr", "right pwr: " + Double.toString(right));
 	}

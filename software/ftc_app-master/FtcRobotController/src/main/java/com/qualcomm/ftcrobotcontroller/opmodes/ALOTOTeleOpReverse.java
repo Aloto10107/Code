@@ -33,52 +33,38 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 //
+
 /**
  * TeleOp Mode
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class K9TeleOp extends OpMode {
-   
+public class ALOTOTeleOpReverse extends OpMode {
+
    /*
-    * Note: the configuration of the servos is such that
-    * as the arm servo approaches 0, the arm position moves up (away from the floor).
-    * Also, as the claw servo approaches 0, the claw opens up (drops the game element).
+    * Note:Initalizing motors, right and left motors will have same values. The third wheel will have
+    * the same values as the left side.
     */
-	// TETRIX VALUES.
-	//final static double ARM_MIN_RANGE  = 0.20;
-	//final static double ARM_MAX_RANGE  = 0.90;
-	//final static double CLAW_MIN_RANGE  = 0.20;
-	//final static double CLAW_MAX_RANGE  = 0.7;
-
-	// position of the arm servo.
-	//double armPosition;
-
-	// amount to change the arm servo position.
-	//double armDelta = 0.1;
-
-	// position of the claw servo
-	//double clawPosition;
-
-	// amount to change the claw servo position by
-	//double clawDelta = 0.1;
 
 	DcMotor FrontmotorRight;
 	DcMotor FrontmotorLeft;
 	DcMotor BackmotorRight;
 	DcMotor BackmotorLeft;
-	//DcMotor Sweeper;
 	DcMotor TheThirdWheel;
-	//Servo claw;
-	//Servo arm;
+	//DcMotor ArmRight;
+
+	/*
+	 *Note: This can be uncommented when a motor is needed for the sweeper
+	 */
+	//DcMotor Sweeper;
+
 
 	/**
 	 * Constructor
 	 */
-	public K9TeleOp() {
+	public ALOTOTeleOpReverse() {
 
 	}
 
@@ -91,47 +77,41 @@ public class K9TeleOp extends OpMode {
 	public void init() {
 
 
+
       /*
-       * Use the hardwareMap to get the dc motors and servos by name. Note
+       * Use the hardwareMap to get the dc motors by name. Note
        * that the names of the devices must match the names used when you
        * configured your robot and created the configuration file.
        */
       
       /*
-       * For the demo Tetrix K9 bot we assume the following,
-       *   There are two motors "motor_1" and "motor_2"
-       *   "motor_1" is on the right side of the bot.
-       *   "motor_2" is on the left side of the bot and reversed.
-       *   
-       * We also assume that there are two servos "servo_1" and "servo_6"
-       *    "servo_1" controls the arm joint of the manipulator.
-       *    "servo_6" controls the claw joint of the manipulator.
+       * For the Duggan bot we assume the following,
+       *   There are 5 motors "FrontmotorRight", "FrontmotorLeft", "BackmotorRight", "BackmotorLeft"
+       *   and "TheThirdWheel"
+       *   "FrontmotorRight" is on the right side of the bot in the front.
+       *   "FrontmotorLeft" is on the left side of the bot and reversed, in the front.
+       *   "BackmotorRight" is on the right side of the bot in the back.
+       *   "BackmotorLeft" is on the left side of the bot and reversed, in the back.
+       *   "TheThirdWheel" is in the front of the robot and is reversed. To make the front wheel
+       *   follow the left side of the bot.
        */
 		FrontmotorRight = hardwareMap.dcMotor.get("motor_fr");
 		FrontmotorLeft = hardwareMap.dcMotor.get("motor_fl");
 		BackmotorRight = hardwareMap.dcMotor.get("motor_br");
 		BackmotorLeft = hardwareMap.dcMotor.get("motor_bl");
 		TheThirdWheel = hardwareMap.dcMotor.get("third_wheel");
+        //ArmRight = hardwareMap.dcMotor.get("arm");
 
 		FrontmotorLeft.setDirection(DcMotor.Direction.REVERSE);
 		BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
-		//BackmotorRight.setDirection(DcMotor.Direction.REVERSE);
-		FrontmotorRight.setDirection(DcMotor.Direction.REVERSE);
+		BackmotorRight.setDirection(DcMotor.Direction.REVERSE);
+		//FrontmotorRight.setDirection(DcMotor.Direction.REVERSE);
 		TheThirdWheel.setDirection(DcMotor.Direction.REVERSE);
-
 
 
 		//Sweeper = hardwareMap.dcMotor.get("motor_sweeper");
 
-
-		//arm = hardwareMap.servo.get("servo_1");
-		//claw = hardwareMap.servo.get("servo_6");
-
-		// assign the starting position of the wrist and claw
-		//armPosition = 0.2;
-		//clawPosition = 0.2;
 	}
-
 	/*
         * This method will be called repeatedly in a loop
         *
@@ -143,74 +123,45 @@ public class K9TeleOp extends OpMode {
       /*
        * Gamepad 1
        * 
-       * Gamepad 1 controls the motors via the left stick, and it controls the
-       * wrist/claw via the a,b, x, y buttons
+       * Gamepad 1 controls the motors via the left and right stick,
+       * Gamepad 2 (Currently not in use) controls the sweeper
        */
 
-		// throttle: left_stick_y ranges from -1 to 1, where -1 is full up, and
+		// throttleRight: right_stick_y ranges from -1 to 1, where -1 is full up, and 1 is full down
+		// throttleLeft: left_stick_y ranges from -1 to 1, where -1 is full up, and
 		// 1 is full down
-		// direction: left_stick_x ranges from -1 to 1, where -1 is full left
-		// and 1 is full right
 		float throttleLeft = -gamepad1.left_stick_y;
 		float throttleRight = -gamepad1.right_stick_y;
-		//float direction = gamepad1.left_stick_x;
+		float Lift = -gamepad2.right_stick_y;
 		float right = throttleRight;
 		float left = throttleLeft;
 
-		float triggerrightup = -gamepad2.right_trigger;
-		float triggerleftdown = -gamepad2.left_trigger;
+		//float triggerrightup = -gamepad2.right_trigger;
+		//float triggerleftdown = -gamepad2.left_trigger;
 		//float bothsweeper = triggerrightup - triggerleftdown;
 
 
 		// clip the right/left values so that the values never exceed +/- 1
 		right = Range.clip(right, -1, 1);
 		left = Range.clip(left, -1, 1);
+		Lift = Range.clip(right, -1, 1);
 		//bothsweeper = Range.clip(bothsweeper, -1, 1);
 
 		// scale the joystick value to make it easier to control
 		// the robot more precisely at slower speeds.
 		right = (float)scaleInput(right);
 		left =  (float)scaleInput(left);
+		Lift = (float)scaleInput(right);
 		//bothsweeper = (float)scaleInput(bothsweeper);
-		// write the values to the motors
+
+		// write the values to the motor
 		FrontmotorRight.setPower(right);
 		BackmotorRight.setPower(right);
 		FrontmotorLeft.setPower(left);
 		BackmotorLeft.setPower(left);
 		//Sweeper.setPower(bothsweeper);
 		TheThirdWheel.setPower(left);
-
-		// update the position of the arm.
-		//if (gamepad1.a) {
-		// if the A button is pushed on gamepad1, increment the position of
-		// the arm servo.
-		//armPosition += armDelta;
-		//}
-
-
-		//if (gamepad1.y) {
-		// if the Y button is pushed on gamepad1, decrease the position of
-		// the arm servo.
-		//armPosition -= armDelta;
-		//}
-
-		// update the position of the claw
-		//if (gamepad1.x) {
-		//clawPosition += clawDelta;
-		//}
-
-		//if (gamepad1.b) {
-		//clawPosition -= clawDelta;
-		//}
-
-		// clip the position values so that they never exceed their allowed range.
-		//armPosition = Range.clip(armPosition, ARM_MIN_RANGE, ARM_MAX_RANGE);
-		//clawPosition = Range.clip(clawPosition, CLAW_MIN_RANGE, CLAW_MAX_RANGE);
-
-		// write position values to the wrist and claw servo
-		//arm.setPosition(armPosition);
-		//claw.setPosition(clawPosition);
-
+		//ArmRight.setPower(Lift);
 
 
       /*
@@ -219,9 +170,7 @@ public class K9TeleOp extends OpMode {
        * will return a null value. The legacy NXT-compatible motor controllers
        * are currently write only.
        */
-		telemetry.addData("Text", "*** Robot Data***");
-		//telemetry.addData("arm", "arm:  " + String.format("%.2f", armPosition));
-		//telemetry.addData("claw", "claw:  " + String.format("%.2f", clawPosition));
+		telemetry.addData("Text", "*** Duggan Data***");
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
 		//telemetry.addData("sweeper tgt pwr","bothsweeper: " + String.format("%.2f", bothsweeper));
@@ -245,6 +194,7 @@ public class K9TeleOp extends OpMode {
         * scaled value is less than linear.  This is to make it easier to drive
         * the robot more precisely at slower speeds.
         */
+
 	double scaleInput(double dVal)  {
 		double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
 				0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };

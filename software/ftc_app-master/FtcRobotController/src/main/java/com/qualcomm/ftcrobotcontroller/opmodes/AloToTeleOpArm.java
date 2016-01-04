@@ -34,28 +34,30 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.Range;
 //
+
 /**
  * TeleOp Mode
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class K9TeleOp extends OpMode {
-   
+public class AloToTeleOpArm extends OpMode {
+
    /*
     * Note: the configuration of the servos is such that
     * as the arm servo approaches 0, the arm position moves up (away from the floor).
     * Also, as the claw servo approaches 0, the claw opens up (drops the game element).
     */
 	// TETRIX VALUES.
-	//final static double ARM_MIN_RANGE  = 0.20;
-	//final static double ARM_MAX_RANGE  = 0.90;
+	final static double lift_MIN_RANGE  = 0.20;
+	final static double lift_MAX_RANGE  = 0.90;
 	//final static double CLAW_MIN_RANGE  = 0.20;
 	//final static double CLAW_MAX_RANGE  = 0.7;
 
 	// position of the arm servo.
-	//double armPosition;
+	// double liftPosition;
 
 	// amount to change the arm servo position.
 	//double armDelta = 0.1;
@@ -72,13 +74,18 @@ public class K9TeleOp extends OpMode {
 	DcMotor BackmotorLeft;
 	//DcMotor Sweeper;
 	DcMotor TheThirdWheel;
-	//Servo claw;
+
+	Servo ServoSwiper;
+	Servo ServoSwiper1;
+	ServoController sc;
+
+	//Servo lift;
 	//Servo arm;
 
 	/**
 	 * Constructor
 	 */
-	public K9TeleOp() {
+	public AloToTeleOpArm() {
 
 	}
 
@@ -108,10 +115,11 @@ public class K9TeleOp extends OpMode {
        *    "servo_6" controls the claw joint of the manipulator.
        */
 		FrontmotorRight = hardwareMap.dcMotor.get("motor_fr");
-		FrontmotorLeft = hardwareMap.dcMotor.get("motor_fl");
-		BackmotorRight = hardwareMap.dcMotor.get("motor_br");
-		BackmotorLeft = hardwareMap.dcMotor.get("motor_bl");
-		TheThirdWheel = hardwareMap.dcMotor.get("third_wheel");
+		FrontmotorLeft  = hardwareMap.dcMotor.get("motor_fl");
+		BackmotorRight  = hardwareMap.dcMotor.get("motor_br");
+		BackmotorLeft   = hardwareMap.dcMotor.get("motor_bl");
+		TheThirdWheel   = hardwareMap.dcMotor.get("third_wheel");
+
 
 		FrontmotorLeft.setDirection(DcMotor.Direction.REVERSE);
 		BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
@@ -180,6 +188,7 @@ public class K9TeleOp extends OpMode {
 		//Sweeper.setPower(bothsweeper);
 		TheThirdWheel.setPower(left);
 
+		ServoSwiper.setPosition(.5);
 		// update the position of the arm.
 		//if (gamepad1.a) {
 		// if the A button is pushed on gamepad1, increment the position of

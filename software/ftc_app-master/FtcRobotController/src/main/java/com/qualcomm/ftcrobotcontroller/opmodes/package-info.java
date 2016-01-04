@@ -31,9 +31,10 @@
 
 /**
  * FTC Robot Controller Operation Modes (Op Mode). User defined Op Modes go here.
- * <p/>
+ * <p>
  * The quickest way to get started is ... TODO: finish docs
- * <p/>
+ * <p>
+
  */
 
 package com.qualcomm.ftcrobotcontroller.opmodes;

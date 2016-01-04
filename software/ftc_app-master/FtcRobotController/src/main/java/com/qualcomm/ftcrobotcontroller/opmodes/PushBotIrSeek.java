@@ -33,10 +33,10 @@ public class PushBotIrSeek extends LinearOpMode {
         waitForStart();
 
         // Continuously track the IR beacon
-        while (opModeIsActive()) {
+        while(opModeIsActive()) {
             double angle = irSeeker.getAngle() / 30;  // value between -4...4
             double strength = irSeeker.getStrength();
-            if (strength > kMinimumStrength && strength < kMaximumStrength) {
+            if (strength>kMinimumStrength && strength<kMaximumStrength) {
                 double leftSpeed = Range.clip(kBaseSpeed + (angle / 8), -1, 1);
                 double rightSpeed = Range.clip(kBaseSpeed - (angle / 8), -1, 1);
                 leftMotor.setPower(leftSpeed);

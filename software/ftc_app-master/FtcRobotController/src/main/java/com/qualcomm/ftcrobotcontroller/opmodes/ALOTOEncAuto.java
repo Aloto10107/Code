@@ -13,7 +13,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
  * @author SSI Robotics
  * @version 2015-08-13-19-48
  */
-public class PushBotAutoSensors extends PushBotTelemetrySensors
+public class ALOTOEncAuto extends PushBotTelemetrySensors
 
 {
     //--------------------------------------------------------------------------
@@ -25,7 +25,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
      *
      * The system calls this member when the class is instantiated.
      */
-    public PushBotAutoSensors ()
+    public ALOTOEncAuto()
 
     {
         //
@@ -55,7 +55,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
         //
         // Call the PushBotHardware (super/base class) start method.
         //
-        super.start ();
+        //super.start ();
 
         //
         // Reset the motor encoders on the drive wheels.
@@ -95,7 +95,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
                 //
                 // Begin the next state.  Drive forward.
                 //
-                drive_using_encoders (-1.0f, 1.0f, -2880, 2880);
+                drive_using_encoders (0.75f, -0.75f, 2880, -2880);
 
                 //
                 // Transition to the next state.
@@ -107,7 +107,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
         //
         // State 1.
         //
-        case 1:
+        /*case 1:
             //
             // Drive forward at full power until the encoders trip.
             //
@@ -123,7 +123,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
             // When the encoder values have been reached the call resets the
             // encoders, halts the motors, and returns true.
             //
-            if (drive_using_encoders (1.0f, 1.0f, 2880, 2880))
+           // if (drive_using_encoders (1.0f, 1.0f, 2880, 2880))
             {
                 //
                 // The drive wheels have reached the specified encoder values,
@@ -131,7 +131,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
                 // again.
                 //
                 v_state++;
-            }
+           // }
             break;
         //
         // State 2.
@@ -263,6 +263,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
         // Perform no action - stay in this case until the OpMode is stopped.
         // This method will still be called regardless of the state machine.
         //
+        */
         default:
             //
             // The autonomous actions have been accomplished (i.e. the state has
@@ -274,14 +275,14 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
         //
         // Update the arm state machine.
         //
-        update_arm_state ();
+       // update_arm_state ();
 
         //
         // Send telemetry data to the driver station.
         //
         update_telemetry (); // Update common telemetry
         telemetry.addData ("11", "Drive State: " + v_state);
-        telemetry.addData ("12", "Arm State: " + v_arm_state);
+       // telemetry.addData ("12", "Arm State: " + v_arm_state);
 
     } // loop
 
@@ -292,7 +293,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
     /**
      * Implement a state machine that controls the arm during auto-operation.
      */
-    public void update_arm_state ()
+    /*public void update_arm_state ()
 
     {
         //
@@ -338,8 +339,9 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
                 //
                 break;
         }
+        */
 
-    } // update_arm_state
+    //}    // update_arm_state
 
     //--------------------------------------------------------------------------
     //
@@ -352,7 +354,7 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
      * to state_1.  When state_1 actions are complete, the state will change to
      * state_2.  This implements a state machine for the loop method.
      */
-    private int v_state = 0;
+   private int v_state = 0;
 
     //--------------------------------------------------------------------------
     //
@@ -365,6 +367,6 @@ public class PushBotAutoSensors extends PushBotTelemetrySensors
      * to state_1.  When state_1 actions are complete, the state will change to
      * state_2.  This implements a state machine for the loop method.
      */
-    private int v_arm_state = 0;
+   // private int v_arm_state = 0;
 
 } // PushBotAutoSensors
