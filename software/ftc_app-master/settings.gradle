@@ -1,4 +1,0 @@
-// FTC Apps
-include(':FtcRobotController')
-
-include ':openCVLibrary310'
