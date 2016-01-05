@@ -37,6 +37,8 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.Range;
+
+import org.swerverobotics.library.ClassFactory;
 //
 
 /**
@@ -121,10 +123,13 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
 		BackmotorRight.setDirection(DcMotor.Direction.REVERSE);
 
+
+
+		ClassFactory.createEasyMotorController(this, FrontmotorLeft, BackmotorLeft);
+		ClassFactory.createEasyMotorController(this, FrontmotorRight, BackmotorRight);
+		resetDriveEncoders();
 		FrontmotorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 		FrontmotorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-
-		resetDriveEncoders();
 
 	}
 
@@ -214,8 +219,10 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		// the robot more precisely at slower speeds.
 		right            = (float)scaleInput(right, 1);
 		left             = (float)scaleInput(left, 1);
-		thisaffectsthearm = (float)scaleArmHook(thisaffectsthearm, 1);
-		thisaffectsthehook   = (float)scaleArmHook(thisaffectsthehook, 1);
+		thisaffectsthearm = Range.clip(thisaffectsthearm, -.5f, .5f);
+		thisaffectsthehook = Range.clip(thisaffectsthehook, -.5f, .5f);
+		thisaffectsthearm = (float)scaleInput(thisaffectsthearm, 1);
+		thisaffectsthehook   = (float)scaleInput(thisaffectsthehook, 1);
 
 		//battleAxThrottle = Range.clip(battleAxThrottle, -1f, 1f);
 		//battleAxLift     = Range.clip(battleAxLift, -1f, 1f);
@@ -234,6 +241,8 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		//ArmRight.setPower(Lift);
 		Winch.setPower(thisaffectsthearm);
 
+		int leftCount = getLeftEncoderCount();
+		int rightCount = getRightEncoderCount();
 
       /*
        * Send telemetry data back to driver station. Note that if we are using
@@ -242,6 +251,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
        * are currently write only.
        */
 		telemetry.addData("Text", "*** Duggan Data***");
+		telemetry.addData("Encoders",  "Right: " + rightCount + " Left: " + leftCount);
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
 		//telemetry.addData("sweeper tgt pwr","bothsweeper: " + String.format("%.2f", bothsweeper));
@@ -267,9 +277,10 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
         */
 
 	double scaleInput(double dVal, double scaleFactor)  {
-		double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
-				0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
-
+		//double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
+		//		0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
+		double[] scaleArray = { 0.0, 0.011, 0.013, 0.0266, 0.0491, 0.0814, 0.123, 0.1754,
+				0.2371, 0.308, 0.38, 0.48, 0.58, 0.69, 0.81, .94, 1.00 };
 		// get the corresponding index for the scaleInput array.
 		int index = (int) (dVal * 16.0);
 
@@ -344,5 +355,4 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		return dScale;
 	}
 
-	
 }
