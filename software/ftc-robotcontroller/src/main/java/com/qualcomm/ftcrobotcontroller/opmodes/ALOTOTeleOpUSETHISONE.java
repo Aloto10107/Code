@@ -60,6 +60,12 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 	DcMotor Arm;
 	DcMotor Hook;
 	DcMotor Winch;
+
+	int armDutyCycle;
+	int armDutyCount;
+	int hookDutyCycle;
+	int hookDutyCount;
+
 	//Servo ServoLid;
 	//ServoController sc;
 	//DcMotor ArmRight;
@@ -123,14 +129,16 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
 		BackmotorRight.setDirection(DcMotor.Direction.REVERSE);
 
-
-
 		ClassFactory.createEasyMotorController(this, FrontmotorLeft, BackmotorLeft);
 		ClassFactory.createEasyMotorController(this, FrontmotorRight, BackmotorRight);
 		resetDriveEncoders();
 		FrontmotorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 		FrontmotorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
+		armDutyCycle = 1;
+		hookDutyCycle = 1;
+		armDutyCount = 0;
+		hookDutyCount = 0;
 	}
 
 	int getLeftEncoderCount()
@@ -201,44 +209,25 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		float left = throttleLeft;
 		float thisaffectsthearm = throttleArm;
 		float thisaffectsthehook = throttleHook;
-		//float triggerrightup = -gamepad2.right_trigger;
-		//float triggerleftdown = -gamepad2.left_trigger;
-		//float bothsweeper = triggerrightup - triggerleftdown;
-
 
 		// clip the right/left values so that the values never exceed +/- 1
 		right = Range.clip(right, -1, 1);
 		left = Range.clip(left, -1, 1);
 
-
-
-		//Lift = Range.clip(right, -1, 1);
-		//bothsweeper = Range.clip(bothsweeper, -1, 1);
-
-		// scale the joystick value to make it easier to control
-		// the robot more precisely at slower speeds.
 		right            = (float)scaleInput(right, 1);
 		left             = (float)scaleInput(left, 1);
-		thisaffectsthearm = Range.clip(thisaffectsthearm, -.5f, .5f);
-		thisaffectsthehook = Range.clip(thisaffectsthehook, -.5f, .5f);
+
 		thisaffectsthearm = (float)scaleInput(thisaffectsthearm, 1);
 		thisaffectsthehook   = (float)scaleInput(thisaffectsthehook, 1);
 
-		//battleAxThrottle = Range.clip(battleAxThrottle, -1f, 1f);
-		//battleAxLift     = Range.clip(battleAxLift, -1f, 1f);
-
-		//Lift = (float)scaleInput(right);
-		//bothsweeper = (float)scaleInput(bothsweeper);
-		//ServoLid.setPosition(1);
-		// write the values to the motor
 		FrontmotorRight.setPower(right);
 		BackmotorRight.setPower(right);
 		FrontmotorLeft.setPower(left);
 		BackmotorLeft.setPower(left);
 		//Sweeper.setPower(bothsweeper);
-		Arm.setPower(thisaffectsthearm);
+
 		Hook.setPower(thisaffectsthehook);
-		//ArmRight.setPower(Lift);
+		Arm.setPower(thisaffectsthearm);
 		Winch.setPower(thisaffectsthearm);
 
 		int leftCount = getLeftEncoderCount();
