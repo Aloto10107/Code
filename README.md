@@ -1,1 +1,2 @@
-![Alt text](/images/photo.png=100x100?raw=true "ALOTO Robotics")
+
+<img src="/images/photo.png" width="100" height="100" />
