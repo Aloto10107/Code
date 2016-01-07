@@ -1,6 +1,6 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import com.example.rmmurphy.visionlibrary.robotVision.RobotVision;
+import org.aloto.visionLibrary.robotVision.RobotVision;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Core;

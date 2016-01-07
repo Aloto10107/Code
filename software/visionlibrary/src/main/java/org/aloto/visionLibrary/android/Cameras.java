@@ -1,4 +1,4 @@
-package com.example.rmmurphy.visionlibrary.android;
+package org.aloto.visionLibrary.android;
 
 import android.content.Context;
 import android.content.pm.PackageManager;

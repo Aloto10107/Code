@@ -56,8 +56,6 @@ public class MyRobotControllerAdministration
         // and one of the FTC HQ example opmodes. You'll probably want to change that.
 
         manager.register("Aloto Autonomous", AlotoAutonomous.class);
-        manager.register(SynchTelemetryOp.class);
-        manager.register(LinearAutonomousPolygon.class);
         manager.register("Aloto Tele-ops", ALOTOTeleOpUSETHISONE.class);
         }
 

@@ -6,10 +6,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.example.rmmurphy.visionlibrary.android.Camera;
-import com.example.rmmurphy.visionlibrary.android.Cameras;
-import com.example.rmmurphy.visionlibrary.robotVision.RobotVision;
-import com.example.rmmurphy.visionlibrary.util.FPS;
+import org.aloto.visionLibrary.android.Camera;
+import org.aloto.visionLibrary.android.Cameras;
+import org.aloto.visionLibrary.robotVision.RobotVision;
+import org.aloto.visionLibrary.util.FPS;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;

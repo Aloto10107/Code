@@ -1,8 +1,8 @@
-package com.example.rmmurphy.visionlibrary.util;
+package org.aloto.visionLibrary.util;
 
 import android.os.Environment;
 
-import com.example.rmmurphy.visionlibrary.android.Util;
+import org.aloto.visionLibrary.android.Util;
 
 import java.io.BufferedWriter;
 import java.io.File;

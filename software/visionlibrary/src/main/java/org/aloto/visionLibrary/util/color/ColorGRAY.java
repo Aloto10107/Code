@@ -1,4 +1,4 @@
-package com.example.rmmurphy.visionlibrary.util.color;
+package org.aloto.visionLibrary.util.color;
 
 import org.opencv.core.Scalar;
 
