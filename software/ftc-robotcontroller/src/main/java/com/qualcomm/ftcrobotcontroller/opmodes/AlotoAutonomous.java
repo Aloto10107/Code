@@ -31,18 +31,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import com.qualcomm.ftcrobotcontroller.android.Cameras;
+import org.opencv.core.Rect;
 
-import org.opencv.core.Size;
-
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * TeleOp Mode
  * <p/>
  * Enables control of the robot via the gamepad
  */
-public class BasicVisionSample extends VisionOpMode {
+public class AlotoAutonomous extends VisionOpMode {
 
     @Override
     public void init() {
@@ -56,9 +54,14 @@ public class BasicVisionSample extends VisionOpMode {
     @Override
     public void loop() {
         super.loop();
-        List<List<Double>> blobs = rbVis.getBlobs();
-        if( blobs.size() > 0)
-           telemetry.addData("Coords:", "x: " + blobs.get(0).get(0).intValue() + " y: " + blobs.get(0).get(2).intValue() + " area: " + blobs.get(0).get(6));
+        ArrayList<Rect> blobs = rbVis.getBlobs();
+
+        if( blobs.size() > 0){
+            int[] point = rbVis.getBlobCenterCoordinates(blobs.get(0));
+            double area = blobs.get(0).area();
+            telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
+        }
+
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
         telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);

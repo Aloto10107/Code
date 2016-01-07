@@ -1,7 +1,6 @@
 //Libraries
-include ':opencv-java', ':SwerveRoboticsLibrary'
-include ':ftc-visionlib'
+include ':opencv-java', ':SwerveRoboticsLibrary', ':visionlibrary', (':ftc-robotcontroller')
 
 //Demos and Tests
 include ':ftc-cameratest'
-include ':ftc-robotcontroller'
+

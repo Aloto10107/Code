@@ -1,7 +1,6 @@
-package com.qualcomm.ftcrobotcontroller.robotVision;
+package com.lasarobotics.tests.camera.robotVision;
 
 import android.app.Application;
-import android.util.Log;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.core.Core;
@@ -9,10 +8,8 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.video.KalmanFilter;
 
@@ -24,7 +21,7 @@ import static org.opencv.imgproc.Imgproc.boundingRect;
 /**
  * Created by rmmurphy on 12/29/2015.
  */
-public class RobotVision
+public class RobotVision extends Application
 {
    private CvCameraViewFrame currentImage;
    private int objectLostCount;
@@ -42,15 +39,18 @@ public class RobotVision
    private Mat kalmanProcNoiseCov;
    private Mat kalmanMeasNoiseCov;
    private Mat kalmanMeas;
+   private int frameRows;
+   private int frameCols;
+   private Mat kalmanTrackedState;
 
    public enum State
    {
       OBJECT_TRACK_INIT, OBJECT_TRACK, OBJECT_LOST, OBJECT_IDLE
    }
 
-   public List<List<Double>> blobs;
+   public ArrayList<Rect> blobs;
 
-   public RobotVision()
+   public RobotVision( int width, int height)
    {
       /*--------------------------------------------------------------------------------------------
        * Declare a 4 state kalman filter where state 0 = x, state 1 = y, state 2 = x', and state 3=
@@ -116,14 +116,16 @@ public class RobotVision
 
       mDetector = new ColorBlobDetector();
 
-      this.blobs = new ArrayList<List<Double>>();
+      this.blobs = new ArrayList<Rect>();
       this.objectTrackState = State.OBJECT_IDLE;
       this.objectLostCount = 0;
       this.objectColorHsv = new Scalar(255);
       this.objectColorRgb = new Scalar(255);
       this.objectTrackingRect = new Rect();
       this.objectTrackInitRect = new Rect();
-
+      this.frameRows = height;
+      this.frameCols = width;
+      this.kalmanTrackedState = new Mat(4, 1, CvType.CV_32F, new Scalar(0));
    }
 
    public ColorBlobDetector getBlobDetector()
@@ -181,12 +183,12 @@ public class RobotVision
       return this.currentImage;
    }
 
-   public void setBlobs(List<List<Double>> blobs)
+   public void setBlobs(ArrayList<Rect> blobs)
    {
       this.blobs = blobs;
    }
 
-   public List<List<Double>> getBlobs()
+   public ArrayList<Rect> getBlobs()
    {
       return this.blobs;
    }/*End getBlobs*/
@@ -247,7 +249,7 @@ public class RobotVision
             /*--------------------------------------------------------------------------------------
              * Find the blob in the region that was touched.
              *------------------------------------------------------------------------------------*/
-            List<List<Double>> blobs = this.findBlobs(currentImage, false);
+            List<Rect> blobs = this.findBlobs(currentImage, false);
 
             Double area;
             int x;
@@ -260,10 +262,10 @@ public class RobotVision
             for(int i = 0; i < blobs.size(); i++)
             {
                //Scalar blobColor = g.getBlobColor(blobs.get(i));
-               x = blobs.get(i).get(1).intValue();
-               y = blobs.get(i).get(3).intValue();
-               width = blobs.get(i).get(4).intValue();
-               height = blobs.get(i).get(5).intValue();
+               x = blobs.get(i).x;
+               y = blobs.get(i).y;
+               width = blobs.get(i).width;
+               height = blobs.get(i).height;
 
                /*-----------------------------------------------------------------------------------
                 * If touched rect is inside the blob rect then its a match.
@@ -287,10 +289,10 @@ public class RobotVision
                 * Object is a match, set the tracking rect to a size 1.5 times larger that the
                 * object rectangle
                 *---------------------------------------------------------------------------------*/
-               x = blobs.get(blobNumber).get(1).intValue();
-               y = blobs.get(blobNumber).get(3).intValue();
-               width = blobs.get(blobNumber).get(4).intValue();
-               height = blobs.get(blobNumber).get(5).intValue();
+               x = blobs.get(blobNumber).x;
+               y = blobs.get(blobNumber).y;
+               width = blobs.get(blobNumber).width;
+               height = blobs.get(blobNumber).height;
 
                if( (x - width / TRACK_RECT_MAX_SCALAR) < 0)
                   this.objectTrackingRect.x = 0;
@@ -311,8 +313,6 @@ public class RobotVision
                   this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) - rows);
                else
                   this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR;
-
-               Log.d("robotVisionTag", "This is my message");
 
                /*-----------------------------------------------------------------------------------
                 * Initialize the Kalman filter to the center coordinates of the object.
@@ -367,7 +367,26 @@ public class RobotVision
                * small. If the blob detection algorithm hasn't identified the object for a preset
                * period of time, go to the object lost state.
                *----------------------------------------------------------------------------------*/
-            List<List<Double>> blobs = this.findBlobs(currentImage, true);
+            ArrayList<Rect> blobs = this.findBlobs(currentImage, true);
+
+            /*--------------------------------------------------------------------------------------
+             * Update transition matrix dt
+             *------------------------------------------------------------------------------------*/
+            kalmanTransMatrix.put(0,2, deltaTimeSec);
+            kalmanTransMatrix.put(1,3, deltaTimeSec);
+            kalman.set_transitionMatrix(kalmanTransMatrix);
+
+            /*--------------------------------------------------------------------------------------
+             * Kalman prediction...
+             *------------------------------------------------------------------------------------*/
+            Mat predCord = kalman.predict();
+
+            /*--------------------------------------------------------------------------------------
+             * Kalman measurement update...
+             *------------------------------------------------------------------------------------*/
+            kalmanMeas.put( 0, 0, blobs.get(0).x);
+            kalmanMeas.put( 1, 0, blobs.get(0).y);
+            kalmanTrackedState = kalman.correct( kalmanMeas);
 
             if(this.objectLostCount == OBJECT_TRACK_TIMEOUT)
             {
@@ -401,7 +420,14 @@ public class RobotVision
 
    }/*End updateObjectTrack*/
 
-   public Scalar getBlobColor(List<Double> blob)
+   public int[] getBlobCenterCoordinates( Rect blob)
+   {
+      int cols = frameCols;
+      int rows = frameRows;
+
+      return new int[]{(blob.x + blob.width/2) - cols / 2, (blob.y + blob.height/2) - rows / 2};
+   }
+   public Scalar getBlobColor(Rect blob)
    {
       int x;
       int y;
@@ -410,21 +436,14 @@ public class RobotVision
 
       Scalar mBlobColorHsv = new Scalar(255);
 
-      x = blob.get(1).intValue();
-      y = blob.get(3).intValue();
-      width = blob.get(4).intValue();
-      height = blob.get(5).intValue();
-
-      Rect blobRect = new Rect(x, y, width, height);
-
-      Mat blobRegionRgba = currentImage.rgba().submat(blobRect);
+      Mat blobRegionRgba = currentImage.rgba().submat(blob);
 
       Mat blobRegionHsv = new Mat();
       Imgproc.cvtColor(blobRegionRgba, blobRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
 
       // Calculate average color of touched region
       mBlobColorHsv = Core.sumElems(blobRegionHsv);
-      int pointCount = blobRect.width * blobRect.height;
+      int pointCount = blob.width * blob.height;
       for(int i = 0; i < mBlobColorHsv.val.length; i++)
          mBlobColorHsv.val[i] /= pointCount;
 
@@ -434,7 +453,7 @@ public class RobotVision
       return mBlobColorHsv;
    }
 
-   public List<List<Double>> findBlobs(CvCameraViewFrame currentImage, boolean useSubMat)
+   public ArrayList<Rect> findBlobs(CvCameraViewFrame currentImage, boolean useSubMat)
    {
       int cols = currentImage.rgba().cols();
       int rows = currentImage.rgba().rows();
@@ -458,7 +477,7 @@ public class RobotVision
       int y;
       int width;
       int height;
-      List<List<Double>> addresses = new ArrayList<List<Double>>();
+      ArrayList<Rect> addresses = new ArrayList<Rect>();
 
       for(int i = 0; i < contours.size(); i++)
       {
@@ -474,33 +493,13 @@ public class RobotVision
          // Get bounding rect of contour
          Rect rect = boundingRect(points);
 
-         ArrayList<Double> singleAddress = new ArrayList<Double>();
-
          if( useSubMat)
          {
             rect.x = rect.x + this.objectTrackingRect.x;
             rect.y = rect.y + this.objectTrackingRect.y;
          }
 
-         x = rect.x + rect.width / 2;
-         y = rect.y + rect.height / 2;
-         area = rect.area();
-         //Center coordinate x
-         singleAddress.add((double) (x - cols / 2));
-         //Rect starting coordinate x
-         singleAddress.add((double) rect.x);
-         //Center coordinate y
-         singleAddress.add((double) (-y + rows / 2));
-         //Rect starting coordinate y
-         singleAddress.add((double) rect.y);
-         //Rect width
-         singleAddress.add((double) rect.width);
-         //Rect height
-         singleAddress.add((double) rect.height);
-         //Blob area
-         singleAddress.add(area);
-
-         addresses.add(singleAddress);
+         addresses.add(rect);
       }
 
       this.blobs = addresses;

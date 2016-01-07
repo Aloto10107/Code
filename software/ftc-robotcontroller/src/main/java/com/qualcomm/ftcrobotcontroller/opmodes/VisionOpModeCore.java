@@ -5,19 +5,17 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.qualcomm.ftcrobotcontroller.R;
-import com.qualcomm.ftcrobotcontroller.android.Cameras;
-import com.qualcomm.ftcrobotcontroller.robotVision.RobotVision;
-import com.qualcomm.ftcrobotcontroller.util.FPS;
+import com.example.rmmurphy.visionlibrary.android.Cameras;
+import com.example.rmmurphy.visionlibrary.robotVision.RobotVision;
+import com.example.rmmurphy.visionlibrary.util.FPS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
@@ -112,7 +110,7 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
                 SPECTRUM_SIZE = new Size(100, 35);
                 CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
 
-                rbVis = new RobotVision();
+
 
                 mOpenCvCameraView = (CameraBridgeViewBase) activity.findViewById(R.id.robot_vision_view);
                 mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -124,6 +122,8 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
                 //Done!
                 width = mOpenCvCameraView.getFrameWidth();
                 height = mOpenCvCameraView.getFrameHeight();
+
+                rbVis = new RobotVision(width, height);
                 initialized = true;
             }
         });

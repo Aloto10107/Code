@@ -31,17 +31,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import com.qualcomm.ftcrobotcontroller.android.Cameras;
-import com.qualcomm.ftcrobotcontroller.util.color.ColorGRAY;
-import com.qualcomm.ftcrobotcontroller.util.color.ColorHSV;
-import com.qualcomm.ftcrobotcontroller.util.color.ColorRGBA;
+import com.example.rmmurphy.visionlibrary.android.Cameras;
+import com.example.rmmurphy.visionlibrary.util.color.ColorHSV;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
 import org.opencv.core.Size;
-
-import java.util.List;
 
 /**
  * TeleOp Mode

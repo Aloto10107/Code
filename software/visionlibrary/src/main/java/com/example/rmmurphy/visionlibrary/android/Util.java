@@ -1,4 +1,4 @@
-package com.qualcomm.ftcrobotcontroller.android;
+package com.example.rmmurphy.visionlibrary.android;
 
 import android.app.Application;
 import android.content.Context;
@@ -79,7 +79,7 @@ public final class Util {
         } else {
             int i = 0;
             while (file.exists()) {
-                file = new File(fileDirectory, fileName + "." + i);
+                file = new File(fileDirectory, fileName + "" + i);
                 i++;
             }
             file.createNewFile();

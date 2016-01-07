@@ -1,0 +1,27 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion '21.1.2'
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            debuggable true
+        }
+        debug {
+            debuggable true
+        }
+    }
+
+}
+
+dependencies {
+    compile files('libs/android-support-v4.jar')
+    compile project(':opencv-java')
+}

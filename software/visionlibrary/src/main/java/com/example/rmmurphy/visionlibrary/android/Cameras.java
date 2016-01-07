@@ -1,4 +1,4 @@
-package com.qualcomm.ftcrobotcontroller.android;
+package com.example.rmmurphy.visionlibrary.android;
 
 import android.content.Context;
 import android.content.pm.PackageManager;

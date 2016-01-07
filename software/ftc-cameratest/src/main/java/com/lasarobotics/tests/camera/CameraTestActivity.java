@@ -2,43 +2,46 @@ package com.lasarobotics.tests.camera;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 
-import org.lasarobotics.vision.test.android.Camera;
-import org.lasarobotics.vision.test.android.Cameras;
-import org.lasarobotics.vision.test.detection.ColorBlobDetector;
-import org.lasarobotics.vision.test.detection.objects.Contour;
-import org.lasarobotics.vision.test.ftc.resq.Beacon;
-import org.lasarobotics.vision.test.image.Drawing;
-import org.lasarobotics.vision.test.util.FPS;
-import org.lasarobotics.vision.test.util.color.ColorGRAY;
-import org.lasarobotics.vision.test.util.color.ColorHSV;
-import org.lasarobotics.vision.test.util.color.ColorRGBA;
+import com.example.rmmurphy.visionlibrary.android.Camera;
+import com.example.rmmurphy.visionlibrary.android.Cameras;
+import com.example.rmmurphy.visionlibrary.robotVision.RobotVision;
+import com.example.rmmurphy.visionlibrary.util.FPS;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class CameraTestActivity extends Activity implements CvCameraViewListener2 {
 
-    private static final ColorHSV colorRadius = new ColorHSV(50, 75, 127);
-    private static final ColorHSV lowerBoundRed = new ColorHSV((int) (305 / 360.0 * 255.0), (int) (0.200 * 255.0), (int) (0.300 * 255.0));
-    private static final ColorHSV upperBoundRed = new ColorHSV((int) ((360.0 + 5.0) / 360.0 * 255.0), 255, 255);
-    private static final ColorHSV lowerBoundBlue = new ColorHSV((int) (170.0 / 360.0 * 255.0), (int) (0.200 * 255.0), (int) (0.750 * 255.0));
-    private static final ColorHSV upperBoundBlue = new ColorHSV((int) (227.0 / 360.0 * 255.0), 255, 255);
-    private Mat mRgba; //RGBA scene image
-    private Mat mGray; //Grayscale scene image
     private CameraBridgeViewBase mOpenCvCameraView;
     private float focalLength; //Camera lens focal length
     //private ObjectDetection.ObjectAnalysis objectAnalysis;
     private FPS fpsCounter;
+    private RobotVision rbVis;
+    private Mat mRgba;
+    private Scalar mBlobColorRgba;
+    private Scalar mBlobColorHsv;
+    private Mat mSpectrum;
+    private Size SPECTRUM_SIZE;
+    private Scalar CONTOUR_COLOR;
+
     private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -59,8 +62,7 @@ public class CameraTestActivity extends Activity implements CvCameraViewListener
             }
         }
     };
-    private ColorBlobDetector detectorRed;
-    private ColorBlobDetector detectorBlue;
+
     public CameraTestActivity() {
 
     }
@@ -140,64 +142,119 @@ public class CameraTestActivity extends Activity implements CvCameraViewListener
             mOpenCvCameraView.disableView();
     }
 
-    public void onCameraViewStarted(int width, int height) {
+    public void onCameraViewStarted(int width, int height)
+    {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
-        mGray = new Mat(height, width, CvType.CV_8UC1);
+        //mDetector = new ColorBlobDetector();
+        mSpectrum = new Mat();
+        mBlobColorRgba = new Scalar(255);
+        mBlobColorHsv = new Scalar(255);
+        SPECTRUM_SIZE = new Size(100, 35);
+        CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
 
-        //Initialize all detectors here
-        detectorRed = new ColorBlobDetector(lowerBoundRed, upperBoundRed);
-        detectorBlue = new ColorBlobDetector(lowerBoundBlue, upperBoundBlue);
+      /*--------------------------------------------------------------------------------------------
+       * Call robot vision init here so that the opencv native bindings have been declared after the
+       * camera starts.
+       *------------------------------------------------------------------------------------------*/
+        rbVis = new RobotVision(width, height);
     }
 
-    public void onCameraViewStopped() {
+    public void onCameraViewStopped()
+    {
         mRgba.release();
-        mGray.release();
     }
 
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        // input frame has RGBA format
+    public boolean onTouch(View v, MotionEvent event)
+    {
+        int cols = mRgba.cols();
+        int rows = mRgba.rows();
+
+        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
+        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+
+        int x = (int) event.getX() - xOffset;
+        int y = (int) event.getY() - yOffset;
+
+        if((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+
+        Rect touchedRect = new Rect();
+
+        touchedRect.x = (x > 8) ? x - 8 : 0;
+        touchedRect.y = (y > 8) ? y - 8 : 0;
+
+        touchedRect.width = (x + 8 < cols) ? x + 8 - touchedRect.x : cols - touchedRect.x;
+        touchedRect.height = (y + 8 < rows) ? y + 8 - touchedRect.y : rows - touchedRect.y;
+
+      /*--------------------------------------------------------------------------------------------
+       * Set the object tracker to the initialization state. On the next camera frame event this
+       * state will be entered.
+       *------------------------------------------------------------------------------------------*/
+        rbVis.setObjectTrackInitRect(touchedRect);
+        rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
+
+        return false; // don't need subsequent touch events
+    }
+
+    public Mat onCameraFrame(CvCameraViewFrame inputFrame)
+    {
         mRgba = inputFrame.rgba();
-        mGray = inputFrame.gray();
-        //Size originalSize = mRgba.size();
 
-        //Transform.flip(mRgba, Transform.FlipType.FLIP_BOTH);
-        //Transform.flip(mGray, Transform.FlipType.FLIP_BOTH);
+      /*--------------------------------------------------------------------------------------------
+       * Track the color, coordinates, and area of the selected object.
+       *------------------------------------------------------------------------------------------*/
+        rbVis.updateObjectTrack(inputFrame);
 
-        //Transform.shrink(mRgba, new Size(480, 480), true);
-        //Transform.shrink(mGray, new Size(480, 480), true);
+        if (rbVis.getObjectTrackState() == RobotVision.State.OBJECT_TRACK) {
 
-        fpsCounter.update();
+            Imgproc.resize(rbVis.getBlobDetector().getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+            ArrayList<Rect> blobs = rbVis.getBlobs();
 
-        try {
-            //Process the frame for the color blobs
-            detectorRed.process(mRgba);
-            detectorBlue.process(mRgba);
+            Double area;
+            int x;
+            int y;
+            int width;
+            int height;
 
-            //Get the list of contours
-            List<Contour> contoursRed = detectorRed.getContours();
-            List<Contour> contoursBlue = detectorBlue.getContours();
+            //Plot the blob locations
+            for (int i = 0; i < blobs.size(); i++) {
+                //Scalar blobColor = g.getBlobColor(blobs.get(i));
+                x = blobs.get(i).x;
+                y = blobs.get(i).y;
+                width = blobs.get(i).width;
+                height = blobs.get(i).height;
 
-            //Get color analysis
-            Beacon beacon = new Beacon();
-            Beacon.BeaconAnalysis colorAnalysis = beacon.analyzeColor(contoursRed, contoursBlue, mRgba, mGray);
+                Imgproc.rectangle(mRgba, new Point(x, y), new Point(x + width, y + height), new Scalar(0, 255, 0, 255), 3);
+                x = x + width / 2;
+                y = y + height / 2;
+                area = blobs.get(i).area();
+                int[] point = rbVis.getBlobCenterCoordinates(blobs.get(i));
 
+                Imgproc.putText(mRgba, "[" + point[0] + "," + point[1] + "," + area.intValue() + "]", new Point(x + 4, y), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
+                Imgproc.circle(mRgba, new Point(x, y), 5, new Scalar(0, 255, 0, 255), -1);
 
-            //DEBUG confidence output
-            Drawing.drawText(mRgba, "Confidence: " + colorAnalysis.getConfidenceString(),
-                    new Point(0, 50), 1.0f, new ColorGRAY(255));
+            }
 
-            //Transform.enlarge(mRgba, originalSize, true);
-            //Transform.enlarge(mGray, originalSize, true);
+            Rect rec = rbVis.getObjectTrackingRect();
 
-            Drawing.drawText(mRgba, colorAnalysis.getStateLeft().toString() + ", " + colorAnalysis.getStateRight().toString(),
-                    new Point(0, 8), 1.0f, new ColorGRAY(255), Drawing.Anchor.BOTTOMLEFT);
-        } catch (Exception e) {
-            Drawing.drawText(mRgba, "Analysis Error", new Point(0, 8), 1.0f, new ColorRGBA("#F44336"), Drawing.Anchor.BOTTOMLEFT);
-            e.printStackTrace();
-        }
+            Imgproc.rectangle(mRgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
 
-        Drawing.drawText(mRgba, "FPS: " + fpsCounter.getFPSString(), new Point(0, 24), 1.0f, new ColorRGBA("#ffffff")); //"#2196F3"
+            Mat colorLabel = mRgba.submat(4, 40, 4, 40);
+            colorLabel.setTo(rbVis.getObjectColorRgb());
+
+            Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
+            mSpectrum.copyTo(spectrumLabel);
+
+        }/*End if( g.getObjectTrackState() == RobotVision.State.OBJECT_TRACK)*/
 
         return mRgba;
+    }
+
+    private Scalar converScalarHsv2Rgba(Scalar hsvColor)
+    {
+        Mat pointMatRgba = new Mat();
+        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
+        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+
+        return new Scalar(pointMatRgba.get(0, 0));
     }
 }

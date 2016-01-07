@@ -1,8 +1,8 @@
-package com.qualcomm.ftcrobotcontroller.util;
+package com.example.rmmurphy.visionlibrary.util;
 
 import android.os.Environment;
 
-import com.qualcomm.ftcrobotcontroller.android.Util;
+import com.example.rmmurphy.visionlibrary.android.Util;
 
 import java.io.BufferedWriter;
 import java.io.File;
