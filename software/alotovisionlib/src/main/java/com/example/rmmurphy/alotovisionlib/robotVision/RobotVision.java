@@ -379,12 +379,17 @@ public class RobotVision
              *------------------------------------------------------------------------------------*/
             Mat predCord = kalman.predict();
 
-            /*--------------------------------------------------------------------------------------
-             * Kalman measurement update...
-             *------------------------------------------------------------------------------------*/
-            kalmanMeas.put( 0, 0, blobs.get(0).x);
-            kalmanMeas.put( 1, 0, blobs.get(0).y);
-            kalmanTrackedState = kalman.correct( kalmanMeas);
+            if( blobs.size() > 0)
+            {
+               /*-----------------------------------------------------------------------------------
+                * Kalman measurement update...
+                *---------------------------------------------------------------------------------*/
+               kalmanMeas.put( 0, 0, blobs.get(0).x);
+               kalmanMeas.put( 1, 0, blobs.get(0).y);
+               kalmanTrackedState = kalman.correct( kalmanMeas);
+            }
+            else
+               this.objectLostCount++;
 
             if(this.objectLostCount == OBJECT_TRACK_TIMEOUT)
             {
