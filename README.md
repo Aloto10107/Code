@@ -1,1 +1,1 @@
-![Alt text](/images/photo.png=200x200?raaw=true "ALOTO Robotics")
+![Alt text](/images/photo.png=100x100?raw=true "ALOTO Robotics")
