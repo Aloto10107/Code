@@ -1,4 +1,4 @@
-package org.aloto.visionLibrary.util;
+package com.example.rmmurphy.alotovisionlib.util;
 
 import org.opencv.core.Point;
 

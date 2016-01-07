@@ -6,10 +6,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
-import org.aloto.visionLibrary.android.Camera;
-import org.aloto.visionLibrary.android.Cameras;
-import org.aloto.visionLibrary.robotVision.RobotVision;
-import org.aloto.visionLibrary.util.FPS;
+import com.example.rmmurphy.alotovisionlib.android.Camera;
+import com.example.rmmurphy.alotovisionlib.android.Cameras;
+import com.example.rmmurphy.alotovisionlib.robotVision.RobotVision;
+import com.example.rmmurphy.alotovisionlib.util.FPS;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -28,7 +28,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 
-public class CameraTestActivity extends Activity implements CvCameraViewListener2 {
+public class CameraTestActivity extends Activity implements View.OnTouchListener, CvCameraViewListener2 {
 
     private CameraBridgeViewBase mOpenCvCameraView;
     private float focalLength; //Camera lens focal length
@@ -53,6 +53,7 @@ public class CameraTestActivity extends Activity implements CvCameraViewListener
                     initialize();
 
                     mOpenCvCameraView.enableView();
+                    mOpenCvCameraView.setOnTouchListener(CameraTestActivity.this);
                 }
                 break;
                 default: {

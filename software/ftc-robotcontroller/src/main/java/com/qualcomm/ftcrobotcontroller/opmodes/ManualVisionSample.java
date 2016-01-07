@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import org.aloto.visionLibrary.android.Cameras;
-import org.aloto.visionLibrary.util.color.ColorHSV;
+import com.example.rmmurphy.alotovisionlib.android.Cameras;
+import com.example.rmmurphy.alotovisionlib.util.color.ColorHSV;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;

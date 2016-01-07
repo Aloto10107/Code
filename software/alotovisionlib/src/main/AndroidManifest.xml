@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.aloto.visionlibrary">
+    package="com.example.rmmurphy.alotovisionlib">
 
     <application
         android:allowBackup="true"

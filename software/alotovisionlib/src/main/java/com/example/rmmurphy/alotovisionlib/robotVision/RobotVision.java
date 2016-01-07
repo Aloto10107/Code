@@ -1,4 +1,4 @@
-package org.aloto.visionLibrary.robotVision;
+package com.example.rmmurphy.alotovisionlib.robotVision;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.core.Core;

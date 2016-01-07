@@ -1,8 +1,4 @@
-package org.aloto.visionLibrary.robotVision;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+package com.example.rmmurphy.alotovisionlib.robotVision;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -10,6 +6,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class ColorBlobDetector {
     // Lower and Upper bounds for range checking in HSV color space

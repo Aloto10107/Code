@@ -8,9 +8,9 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.qualcomm.ftcrobotcontroller.R;
-import org.aloto.visionLibrary.android.Cameras;
-import org.aloto.visionLibrary.robotVision.RobotVision;
-import org.aloto.visionLibrary.util.FPS;
+import com.example.rmmurphy.alotovisionlib.android.Cameras;
+import com.example.rmmurphy.alotovisionlib.robotVision.RobotVision;
+import com.example.rmmurphy.alotovisionlib.util.FPS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 
