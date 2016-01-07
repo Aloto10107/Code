@@ -1,1 +1,1 @@
-[[https://github.com/Aloto10107/robotics/blob/master/images/photo.png]]
+![Alt text](/images/photo.png?raaw=true "ALOTO Robotics")
