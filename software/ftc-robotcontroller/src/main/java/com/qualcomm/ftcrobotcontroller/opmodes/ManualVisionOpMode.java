@@ -1,5 +1,7 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
+import com.qualcomm.ftcrobotcontroller.opmodes.VisionOpModeCore;
+
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
 

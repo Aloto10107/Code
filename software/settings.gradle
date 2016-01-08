@@ -1,6 +1,3 @@
-//Libraries
-include ':opencv-java', ':SwerveRoboticsLibrary', ':ftc-robotcontroller', ':alotovisionlib'
-
-//Demos and Tests
-include ':ftc-cameratest'
-
+include ':SwerveRoboticsLibrary', ':YourCodeHere', ':opencv-java', ':alotovisionlib','ftc-cameratest'
+// FTC Apps
+include (':ftc-robotcontroller')

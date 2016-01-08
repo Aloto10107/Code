@@ -111,32 +111,50 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 android:id="@+id/textWifiDirectStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="" />
+                android:text=""
+                android:layout_alignParentEnd="false" />
+
+            <TextView
+                android:id="@+id/textWifiDirectPassphrase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:layout_below="@+id/textWifiDirectStatus"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="false" />
 
             <TextView
                 android:id="@+id/textRobotStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/textWifiDirectStatus"
-                android:text="" />
+                android:text=""
+                android:layout_below="@+id/textWifiDirectPassphrase"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true" />
 
             <TextView
                 android:id="@+id/textOpMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text=""
                 android:layout_below="@+id/textRobotStatus"
-                android:text="" />
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentStart="false" />
 
             <TextView
                 android:id="@+id/textErrorMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/textOpMode"
                 android:textColor="#990000"
                 android:textStyle="bold"
                 android:minLines="2"
                 android:maxLines="4"
-                android:text="" />
+                android:text=""
+                android:layout_above="@+id/textGamepad1"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentStart="false" />
 
             <TextView
                 android:id="@+id/textGamepad1"

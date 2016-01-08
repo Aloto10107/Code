@@ -36,6 +36,7 @@ dependencies {
     compile(name: 'Analytics-release', ext: 'aar')
     compile(name: 'WirelessP2p-release', ext: 'aar')
     compile(name: 'Analytics-release', ext: 'aar')
+
     compile project(':opencv-java')
     compile project(':alotovisionlib')
 }

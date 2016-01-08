@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-
 android {
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
@@ -21,4 +20,6 @@ android {
     lintOptions {
         abortOnError false
     }
+}
+dependencies {
 }
