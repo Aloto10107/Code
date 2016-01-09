@@ -223,10 +223,10 @@ public class CameraTelop extends VisionOpMode {
 		thisaffectsthearm = (float)scaleInput(thisaffectsthearm, 1);
 		thisaffectsthehook   = (float)scaleInput(thisaffectsthehook, 1);
 
-		FrontmotorRight.setPower(right);
-		BackmotorRight.setPower(right);
-		FrontmotorLeft.setPower(left);
-		BackmotorLeft.setPower(left);
+		//FrontmotorRight.setPower(right);
+		//BackmotorRight.setPower(right);
+		//FrontmotorLeft.setPower(left);
+		//BackmotorLeft.setPower(left);
 		//Sweeper.setPower(bothsweeper);
 
 		Hook.setPower(thisaffectsthehook);
@@ -245,10 +245,56 @@ public class CameraTelop extends VisionOpMode {
 		telemetry.addData("Text", "*** Duggan Data***");
 		ArrayList<Rect> blobs = rbVis.getBlobs();
 
+		int x;
+		int y;
+		int width;
+		int height;
+		double area;
+
 		if( blobs.size() > 0){
-			int[] point = rbVis.getBlobCenterCoordinates(blobs.get(0));
-			double area = blobs.get(0).area();
-			telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
+			if( blobs.size() > 0){
+
+				double maxArea = 0.0f;
+				int index = 0;
+				for (int i = 0; i < blobs.size(); i++) {
+					//Scalar blobColor = g.getBlobColor(blobs.get(i));
+					x = blobs.get(i).x;
+					y = blobs.get(i).y;
+					width = blobs.get(i).width;
+					height = blobs.get(i).height;
+					area = blobs.get(i).area();
+					if( area > maxArea) {
+						maxArea = area;
+						index = i;
+					}
+				}
+				int[] point = rbVis.getBlobCenterCoordinates(blobs.get(index));
+
+				area = blobs.get(index).area();
+				telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
+
+				if( area < 20000){
+
+					double error = (double)(0 - point[0])/200;
+
+					FrontmotorRight.setPower(-.25 + error);
+					BackmotorRight.setPower(-.25 + error);
+					FrontmotorLeft.setPower(-.25 - error);
+					BackmotorLeft.setPower(-.25 - error);
+				}
+				else{
+					FrontmotorRight.setPower(0);
+					BackmotorRight.setPower(0);
+					FrontmotorLeft.setPower(0);
+					BackmotorLeft.setPower(0);
+				}
+			}
+			else{
+				FrontmotorRight.setPower(0);
+				BackmotorRight.setPower(0);
+				FrontmotorLeft.setPower(0);
+				BackmotorLeft.setPower(0);
+			}
 		}
 		//telemetry.addData("Encoders",  "Right: " + rightCount + " Left: " + leftCount);
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));

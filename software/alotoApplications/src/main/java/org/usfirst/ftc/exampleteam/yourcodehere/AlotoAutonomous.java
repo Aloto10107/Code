@@ -59,8 +59,29 @@ public class AlotoAutonomous extends VisionOpMode {
         ArrayList<Rect> blobs = rbVis.getBlobs();
 
         if( blobs.size() > 0){
-            int[] point = rbVis.getBlobCenterCoordinates(blobs.get(0));
-            double area = blobs.get(0).area();
+
+            double area;
+            double maxArea = 0.0f;
+            int index = 0;
+            int x;
+            int y;
+            int width;
+            int height;
+            for (int i = 0; i < blobs.size(); i++) {
+                //Scalar blobColor = g.getBlobColor(blobs.get(i));
+                x = blobs.get(i).x;
+                y = blobs.get(i).y;
+                width = blobs.get(i).width;
+                height = blobs.get(i).height;
+                area = blobs.get(i).area();
+                if( area > maxArea) {
+                    maxArea = area;
+                    index = i;
+                }
+            }
+            int[] point = rbVis.getBlobCenterCoordinates(blobs.get(index));
+
+            area = blobs.get(index).area();
             telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
         }
 
