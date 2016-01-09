@@ -317,24 +317,24 @@ public class RobotVision
                width = blobs.get(blobNumber).width;
                height = blobs.get(blobNumber).height;
 
-               if( (x - width / TRACK_RECT_MAX_SCALAR) < 0)
-                  this.objectTrackingRect.x = 0;
-               else
-                  this.objectTrackingRect.x = (int)((double)x - (double)width / TRACK_RECT_MAX_SCALAR);
+               //if( (x - width / TRACK_RECT_MAX_SCALAR) < 0)
+               //   this.objectTrackingRect.x = 0;
+               //else
+                  this.objectTrackingRect.x = (int)((double)x - (double)width*RACK_RECT_MAX_SCALAR/2);
 
-               if( (y - height / TRACK_RECT_MAX_SCALAR) < 0)
-                  this.objectTrackingRect.y = 0;
-               else
-                  this.objectTrackingRect.y = (int)((double)y - (double)height / TRACK_RECT_MAX_SCALAR);
+               //if( (y - height / TRACK_RECT_MAX_SCALAR) < 0)
+               //   this.objectTrackingRect.y = 0;
+               //else
+                  this.objectTrackingRect.y = (int)((double)y - (double)height*TRACK_RECT_MAX_SCALAR/2);
 
-               if( (this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) > cols)
-                  this.objectTrackingRect.width = width * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) - cols);
-               else
+               //if( (this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) > cols)
+               //   this.objectTrackingRect.width = width * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) - cols);
+               //else
                   this.objectTrackingRect.width = width * TRACK_RECT_MAX_SCALAR;
 
-               if( (this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) > rows)
-                  this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) - rows);
-               else
+               //if( (this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) > rows)
+               //   this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) - rows);
+               //else
                   this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR;
 
                /*-----------------------------------------------------------------------------------
