@@ -31,12 +31,17 @@
 
 package org.usfirst.ftc.exampleteam.yourcodehere;
 
+import com.example.rmmurphy.alotovisionlib.android.Cameras;
+import com.qualcomm.ftcrobotcontroller.opmodes.VisionOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.util.Range;
 
+import org.opencv.core.Rect;
 import org.swerverobotics.library.ClassFactory;
+
+import java.util.ArrayList;
 //
 
 /**
@@ -44,7 +49,7 @@ import org.swerverobotics.library.ClassFactory;
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class ALOTOTeleOpUSETHISONE extends OpMode {
+public class CameraTelop extends VisionOpMode {
 
    /*
     * Note:Initalizing motors, right and left motors will have same values. The third wheel will have
@@ -77,7 +82,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 	/**
 	 * Constructor
 	 */
-	public ALOTOTeleOpUSETHISONE() {
+	public CameraTelop() {
 
 	}
 
@@ -89,8 +94,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
         */
 	@Override
 	public void init() {
-
-
+		super.init();
 
       /*
        * Use the hardwareMap to get the dc motors by name. Note
@@ -137,6 +141,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		hookDutyCycle = 1;
 		armDutyCount = 0;
 		hookDutyCount = 0;
+
 	}
 
 	int getLeftEncoderCount()
@@ -186,7 +191,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
         */
 	@Override
 	public void loop() {
-
+		super.loop();
       /*
        * Gamepad `
        * 
@@ -218,10 +223,10 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		thisaffectsthearm = (float)scaleInput(thisaffectsthearm, 1);
 		thisaffectsthehook   = (float)scaleInput(thisaffectsthehook, 1);
 
-		FrontmotorRight.setPower(right);
-		BackmotorRight.setPower(right);
-		FrontmotorLeft.setPower(left);
-		BackmotorLeft.setPower(left);
+		//FrontmotorRight.setPower(right);
+		//BackmotorRight.setPower(right);
+		//FrontmotorLeft.setPower(left);
+		//BackmotorLeft.setPower(left);
 		//Sweeper.setPower(bothsweeper);
 
 		Hook.setPower(thisaffectsthehook);
@@ -238,6 +243,59 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
        * are currently write only.
        */
 		telemetry.addData("Text", "*** Duggan Data***");
+		ArrayList<Rect> blobs = rbVis.getBlobs();
+
+		int x;
+		int y;
+		int width;
+		int height;
+		double area;
+
+		if( blobs.size() > 0){
+			if( blobs.size() > 0){
+
+				double maxArea = 0.0f;
+				int index = 0;
+				for (int i = 0; i < blobs.size(); i++) {
+					//Scalar blobColor = g.getBlobColor(blobs.get(i));
+					x = blobs.get(i).x;
+					y = blobs.get(i).y;
+					width = blobs.get(i).width;
+					height = blobs.get(i).height;
+					area = blobs.get(i).area();
+					if( area > maxArea) {
+						maxArea = area;
+						index = i;
+					}
+				}
+				int[] point = rbVis.getBlobCenterCoordinates(blobs.get(index));
+
+				area = blobs.get(index).area();
+				telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
+
+				if( area < 20000){
+
+					double error = (double)(0 - point[0])/200;
+
+					FrontmotorRight.setPower(-.25 + error);
+					BackmotorRight.setPower(-.25 + error);
+					FrontmotorLeft.setPower(-.25 - error);
+					BackmotorLeft.setPower(-.25 - error);
+				}
+				else{
+					FrontmotorRight.setPower(0);
+					BackmotorRight.setPower(0);
+					FrontmotorLeft.setPower(0);
+					BackmotorLeft.setPower(0);
+				}
+			}
+			else{
+				FrontmotorRight.setPower(0);
+				BackmotorRight.setPower(0);
+				FrontmotorLeft.setPower(0);
+				BackmotorLeft.setPower(0);
+			}
+		}
 		//telemetry.addData("Encoders",  "Right: " + rightCount + " Left: " + leftCount);
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
@@ -253,7 +311,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
         */
 	@Override
 	public void stop() {
-
+		super.stop();
 	}
 
 
