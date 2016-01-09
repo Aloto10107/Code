@@ -101,7 +101,7 @@ public class RobotVision
        *------------------------------------------------------------------------------------------*/
       Core.setIdentity( meas);
       Core.setIdentity( kalmanProcNoiseCov, Scalar.all(1e-4));
-      Core.setIdentity( kalmanMeasNoiseCov, Scalar.all(1e-1));
+      Core.setIdentity( kalmanMeasNoiseCov, Scalar.all(1e-3));
       /*--------------------------------------------------------------------------------------------
        * We have known starting coordinates so set this value high.
        *------------------------------------------------------------------------------------------*/
@@ -148,6 +148,7 @@ public class RobotVision
 
    public void setObjectTrackInitRect(Rect trackRect)
    {
+
       this.objectTrackInitRect = trackRect;
    }
 
@@ -158,7 +159,31 @@ public class RobotVision
 
    public Rect getObjectTrackingRect()
    {
-      return this.objectTrackingRect;
+      int cols = frameCols;
+      int rows = frameRows;
+      Rect trackRect = new Rect();
+
+      if( objectTrackingRect.x < 0)
+         trackRect.x = 0;
+      else
+         trackRect.x = objectTrackingRect.x;
+
+      if( objectTrackingRect.y < 0)
+         trackRect.y = 0;
+      else
+         trackRect.y = objectTrackingRect.y;
+
+      if( (trackRect.x + objectTrackingRect.width) > cols)
+         trackRect.width = objectTrackingRect.width - ((trackRect.x + objectTrackingRect.width) - cols);
+      else
+         trackRect.width = objectTrackingRect.width;
+
+      if( (trackRect.y + objectTrackingRect.height) > rows)
+         trackRect.height = objectTrackingRect.height - ((trackRect.y + objectTrackingRect.height) - rows);
+      else
+         trackRect.height = objectTrackingRect.height;
+
+      return trackRect;
    }
 
    public void setObjectTrackState(State objectState)
@@ -316,14 +341,15 @@ public class RobotVision
                 * Initialize the Kalman filter to the center coordinates of the object.
                 *---------------------------------------------------------------------------------*/
                Mat statePred = kalman.get_statePre();
+
                statePred.put(0, 0, (double) x + (double) width / 2);
-               statePred.put(0, 0, (double) y + (double) height / 2);
+               statePred.put(1, 0, (double) y + (double) height / 2);
                kalman.set_statePre(statePred);
 
                /*-----------------------------------------------------------------------------------
                 * Update transition matrix dt
                 *---------------------------------------------------------------------------------*/
-               kalmanTransMatrix.put(0,2, deltaTimeSec);
+               kalmanTransMatrix.put(0, 2, deltaTimeSec);
                kalmanTransMatrix.put(1,3, deltaTimeSec);
                kalman.set_transitionMatrix(kalmanTransMatrix);
 
@@ -348,6 +374,13 @@ public class RobotVision
                trans[3][1] = kalmanTransMatrix.get(3,1)[0];
                trans[3][2] = kalmanTransMatrix.get(3,2)[0];
                trans[3][3] = kalmanTransMatrix.get(3,3)[0];
+
+               /*-----------------------------------------------------------------------------------
+                * We have known starting coordinates so set this value high.
+                *---------------------------------------------------------------------------------*/
+               Mat errorCovPost = kalman.get_errorCovPost();
+               Core.setIdentity(errorCovPost, Scalar.all(1));
+               kalman.set_errorCovPost(errorCovPost);
 
                this.objectTrackState = State.OBJECT_TRACK;
             }
@@ -384,12 +417,25 @@ public class RobotVision
                /*-----------------------------------------------------------------------------------
                 * Kalman measurement update...
                 *---------------------------------------------------------------------------------*/
-               kalmanMeas.put( 0, 0, blobs.get(0).x);
-               kalmanMeas.put( 1, 0, blobs.get(0).y);
+               kalmanMeas.put( 0, 0, (double)blobs.get(0).x + (double)blobs.get(0).width/2);
+               kalmanMeas.put( 1, 0, (double)blobs.get(0).y + (double)blobs.get(0).height/2);
                kalmanTrackedState = kalman.correct( kalmanMeas);
             }
             else
+            {
+               /*-----------------------------------------------------------------------------------
+                * Blob not detected use the predicted measurement as the estimate.
+                *---------------------------------------------------------------------------------*/
+               kalmanTrackedState = predCord;
                this.objectLostCount++;
+            }
+
+            /*--------------------------------------------------------------------------------------
+             * Move the object tracking rectangle based on the Kalman estimate coordinates.
+             *------------------------------------------------------------------------------------*/
+
+            objectTrackingRect.x = (int)kalmanTrackedState.get(0,0)[0] - objectTrackingRect.width/2;
+            objectTrackingRect.y = (int)kalmanTrackedState.get(1,0)[0] - objectTrackingRect.height/2;
 
             if(this.objectLostCount == OBJECT_TRACK_TIMEOUT)
             {
@@ -422,6 +468,17 @@ public class RobotVision
        *------------------------------------------------------------------------------------------*/
 
    }/*End updateObjectTrack*/
+
+   public double[] getKalmanTrackedCoordinates( )
+   {
+      double cols = (double)frameCols;
+      double rows = (double)frameRows;
+      double x = kalmanTrackedState.get(0,0)[0];
+      double y = kalmanTrackedState.get(1,0)[0];
+      double dx = kalmanTrackedState.get(2,0)[0];
+      double dy = kalmanTrackedState.get(3,0)[0];
+      return new double[]{x,y,dx,dy};
+   }
 
    public int[] getBlobCenterCoordinates( Rect blob)
    {

@@ -240,6 +240,9 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
                 Rect rec = rbVis.getObjectTrackingRect();
                 Imgproc.rectangle(mRgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
             }
+            double[] coord = rbVis.getKalmanTrackedCoordinates();
+
+            Imgproc.circle(mRgba, new Point((int)coord[0], (int)coord[1]), 5, new Scalar(0, 255, 255, 255), -1);
 
             Mat colorLabel = mRgba.submat(4, 40, 4, 40);
             colorLabel.setTo(rbVis.getObjectColorRgb());
