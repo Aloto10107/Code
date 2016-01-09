@@ -31,12 +31,17 @@
 
 package org.usfirst.ftc.exampleteam.yourcodehere;
 
+import com.example.rmmurphy.alotovisionlib.android.Cameras;
+import com.qualcomm.ftcrobotcontroller.opmodes.VisionOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.util.Range;
 
+import org.opencv.core.Rect;
 import org.swerverobotics.library.ClassFactory;
+
+import java.util.ArrayList;
 //
 
 /**
@@ -44,7 +49,7 @@ import org.swerverobotics.library.ClassFactory;
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class ALOTOTeleOpUSETHISONE extends OpMode {
+public class CameraTelop extends VisionOpMode {
 
    /*
     * Note:Initalizing motors, right and left motors will have same values. The third wheel will have
@@ -77,7 +82,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 	/**
 	 * Constructor
 	 */
-	public ALOTOTeleOpUSETHISONE() {
+	public CameraTelop() {
 
 	}
 
@@ -89,8 +94,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
         */
 	@Override
 	public void init() {
-
-
+		super.init();
 
       /*
        * Use the hardwareMap to get the dc motors by name. Note
@@ -137,6 +141,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		hookDutyCycle = 1;
 		armDutyCount = 0;
 		hookDutyCount = 0;
+
 	}
 
 	int getLeftEncoderCount()
@@ -186,7 +191,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
         */
 	@Override
 	public void loop() {
-
+		super.loop();
       /*
        * Gamepad `
        * 
@@ -238,6 +243,13 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
        * are currently write only.
        */
 		telemetry.addData("Text", "*** Duggan Data***");
+		ArrayList<Rect> blobs = rbVis.getBlobs();
+
+		if( blobs.size() > 0){
+			int[] point = rbVis.getBlobCenterCoordinates(blobs.get(0));
+			double area = blobs.get(0).area();
+			telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
+		}
 		//telemetry.addData("Encoders",  "Right: " + rightCount + " Left: " + leftCount);
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
@@ -253,7 +265,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
         */
 	@Override
 	public void stop() {
-
+		super.stop();
 	}
 
 

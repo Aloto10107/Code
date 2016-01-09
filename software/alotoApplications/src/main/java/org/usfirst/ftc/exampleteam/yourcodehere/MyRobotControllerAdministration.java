@@ -5,7 +5,6 @@ import android.content.Context;
 import org.swerverobotics.library.SwerveUtil;
 import org.swerverobotics.library.interfaces.*;
 import org.swerverobotics.library.examples.*;
-import com.qualcomm.ftcrobotcontroller.opmodes.*;
 
 /**
  * MyRobotControllerAdministration is a container for 'administrative' methods that interact
@@ -53,9 +52,11 @@ public class MyRobotControllerAdministration
         // As an example, we here register some examples from the Swerve library
         // and one of the FTC HQ example opmodes. You'll probably want to change that.
 
-        manager.register(AlotoAutonomous.class);
-        manager.register(ALOTOTeleOpUSETHISONE.class);
-        manager.register(ManualVisionSample.class);
+            //manager.register(SynchTeleOp.class);
+            //manager.register(SynchTelemetryOp.class);
+            manager.register("Autonomous", AlotoAutonomous.class);
+            manager.register("Teleops", ALOTOTeleOpUSETHISONE.class);
+            manager.register("Camera Teleop", CameraTelop.class);
         }
 
     /**

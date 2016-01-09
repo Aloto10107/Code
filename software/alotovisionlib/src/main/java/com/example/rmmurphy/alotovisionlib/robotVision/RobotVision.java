@@ -24,7 +24,7 @@ public class RobotVision
    private CvCameraViewFrame currentImage;
    private int objectLostCount;
    private static int OBJECT_TRACK_TIMEOUT = 10;
-   private static int TRACK_RECT_MAX_SCALAR = 2;
+   private static int TRACK_RECT_MAX_SCALAR = 4;
    private State objectTrackState;
    private Scalar objectColorHsv;
    private Scalar objectColorRgb;
@@ -292,15 +292,15 @@ public class RobotVision
                width = blobs.get(blobNumber).width;
                height = blobs.get(blobNumber).height;
 
-               if( (x - width / TRACK_RECT_MAX_SCALAR) < 0)
+               if( (x - (width*TRACK_RECT_MAX_SCALAR)/2) < 0)
                   this.objectTrackingRect.x = 0;
                else
-                  this.objectTrackingRect.x = (int)((double)x - (double)width / TRACK_RECT_MAX_SCALAR);
+                  this.objectTrackingRect.x = (int)((double)x - (double)(width*TRACK_RECT_MAX_SCALAR)/2);
 
-               if( (y - height / TRACK_RECT_MAX_SCALAR) < 0)
+               if( (y - (height*TRACK_RECT_MAX_SCALAR)/2) < 0)
                   this.objectTrackingRect.y = 0;
                else
-                  this.objectTrackingRect.y = (int)((double)y - (double)height / TRACK_RECT_MAX_SCALAR);
+                  this.objectTrackingRect.y = (int)((double)y - (double)(height*TRACK_RECT_MAX_SCALAR)/2);
 
                if( (this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) > cols)
                   this.objectTrackingRect.width = width * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) - cols);
@@ -317,7 +317,7 @@ public class RobotVision
                 *---------------------------------------------------------------------------------*/
                Mat statePred = kalman.get_statePre();
                statePred.put(0, 0, (double) x + (double) width / 2);
-               statePred.put(0, 0, (double) y + (double) height / 2);
+               statePred.put(1, 0, (double) y + (double) height / 2);
                kalman.set_statePre(statePred);
 
                /*-----------------------------------------------------------------------------------
@@ -460,6 +460,7 @@ public class RobotVision
    {
       int cols = currentImage.rgba().cols();
       int rows = currentImage.rgba().rows();
+      useSubMat = false;
 
       if( useSubMat)
       {
