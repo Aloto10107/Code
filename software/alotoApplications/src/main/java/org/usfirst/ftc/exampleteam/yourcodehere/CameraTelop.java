@@ -243,51 +243,34 @@ public class CameraTelop extends VisionOpMode {
        * are currently write only.
        */
 		telemetry.addData("Text", "*** Duggan Data***");
-		ArrayList<Rect> blobs = rbVis.getBlobs();
 
-		int x;
-		int y;
-		int width;
-		int height;
+		double x;
+		double y;
+		double width;
+		double height;
 		double area;
 
-		if( blobs.size() > 0){
-			if( blobs.size() > 0){
+		if( rbVis.isTargetLocked() == true)
+		{
+			int[] rawTarget = rbVis.getRawTargetCoords();
+			double[] filteredTarget = rbVis.getFilteredTargetCoords();
 
-				double maxArea = 0.0f;
-				int index = 0;
-				for (int i = 0; i < blobs.size(); i++) {
-					//Scalar blobColor = g.getBlobColor(blobs.get(i));
-					x = blobs.get(i).x;
-					y = blobs.get(i).y;
-					width = blobs.get(i).width;
-					height = blobs.get(i).height;
-					area = blobs.get(i).area();
-					if( area > maxArea) {
-						maxArea = area;
-						index = i;
-					}
-				}
-				int[] point = rbVis.getBlobCenterCoordinates(blobs.get(index));
+			x = filteredTarget[0];
+			y = filteredTarget[1];
+			width = filteredTarget[4];
+			height = filteredTarget[5];
 
-				area = blobs.get(index).area();
-				telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
+			area = width*height;
+			telemetry.addData("Coords:", "x: " + x + " y: " + y+ " area: " + area);
 
-				if( area < 20000){
+			if( area < 20000){
 
-					double error = (double)(0 - point[0])/200;
+				double error = (double)(0 - x)/200;
 
-					FrontmotorRight.setPower(-.25 + error);
-					BackmotorRight.setPower(-.25 + error);
-					FrontmotorLeft.setPower(-.25 - error);
-					BackmotorLeft.setPower(-.25 - error);
-				}
-				else{
-					FrontmotorRight.setPower(0);
-					BackmotorRight.setPower(0);
-					FrontmotorLeft.setPower(0);
-					BackmotorLeft.setPower(0);
-				}
+				FrontmotorRight.setPower(-.25 + error);
+				BackmotorRight.setPower(-.25 + error);
+				FrontmotorLeft.setPower(-.25 - error);
+				BackmotorLeft.setPower(-.25 - error);
 			}
 			else{
 				FrontmotorRight.setPower(0);
@@ -296,6 +279,13 @@ public class CameraTelop extends VisionOpMode {
 				BackmotorLeft.setPower(0);
 			}
 		}
+		else{
+			FrontmotorRight.setPower(0);
+			BackmotorRight.setPower(0);
+			FrontmotorLeft.setPower(0);
+			BackmotorLeft.setPower(0);
+		}
+
 		//telemetry.addData("Encoders",  "Right: " + rightCount + " Left: " + leftCount);
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));

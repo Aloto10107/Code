@@ -56,35 +56,12 @@ public class AlotoAutonomous extends VisionOpMode {
     @Override
     public void loop() {
         super.loop();
-        ArrayList<Rect> blobs = rbVis.getBlobs();
-
-        if( blobs.size() > 0){
-
-            double area;
-            double maxArea = 0.0f;
-            int index = 0;
-            int x;
-            int y;
-            int width;
-            int height;
-            for (int i = 0; i < blobs.size(); i++) {
-                //Scalar blobColor = g.getBlobColor(blobs.get(i));
-                x = blobs.get(i).x;
-                y = blobs.get(i).y;
-                width = blobs.get(i).width;
-                height = blobs.get(i).height;
-                area = blobs.get(i).area();
-                if( area > maxArea) {
-                    maxArea = area;
-                    index = i;
-                }
-            }
-            int[] point = rbVis.getBlobCenterCoordinates(blobs.get(index));
-
-            area = blobs.get(index).area();
-            telemetry.addData("Coords:", "x: " + point[0] + " y: " + point[1] + " area: " + area);
+        if( rbVis.isTargetLocked() == true)
+        {
+            int[] rawTarget = rbVis.getRawTargetCoords();
+            double[] filteredTarget = rbVis.getFilteredTargetCoords();
+            telemetry.addData("Coords:", "x: " + (int)filteredTarget[0] + " y: " + (int)filteredTarget[1] + " area: " + (int)(filteredTarget[4]*filteredTarget[5]));
         }
-
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
         telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);

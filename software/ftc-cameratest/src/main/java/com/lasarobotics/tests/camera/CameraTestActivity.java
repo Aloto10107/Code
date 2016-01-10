@@ -199,16 +199,21 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
     public Mat onCameraFrame(CvCameraViewFrame inputFrame)
     {
         mRgba = inputFrame.rgba();
+        int cols = mRgba.cols();
+        int rows = mRgba.rows();
 
       /*--------------------------------------------------------------------------------------------
        * Track the color, coordinates, and area of the selected object.
        *------------------------------------------------------------------------------------------*/
         rbVis.updateObjectTrack(inputFrame);
 
-        if (rbVis.getObjectTrackState() == RobotVision.State.OBJECT_TRACK) {
+        Rect touchedRect = rbVis.getObjectTrackInitRect();
 
+        Imgproc.circle(mRgba, new Point((int) touchedRect.x + touchedRect.width / 2, touchedRect.y + touchedRect.height / 2), 5, new Scalar(255, 0, 0, 255), -1);
+
+        if (rbVis.isTargetLocked())
+        {
             Imgproc.resize(rbVis.getBlobDetector().getSpectrum(), mSpectrum, SPECTRUM_SIZE);
-            ArrayList<Rect> blobs = rbVis.getBlobs();
 
             Double area;
             int x;
@@ -216,33 +221,26 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
             int width;
             int height;
 
-            //Plot the blob locations
-            for (int i = 0; i < blobs.size(); i++) {
-                //Scalar blobColor = g.getBlobColor(blobs.get(i));
-                x = blobs.get(i).x;
-                y = blobs.get(i).y;
-                width = blobs.get(i).width;
-                height = blobs.get(i).height;
+            int[] rawTarget = rbVis.getRawTargetCoords();
+            double[] filteredTarget = rbVis.getFilteredTargetCoords();
 
-                Imgproc.rectangle(mRgba, new Point(x, y), new Point(x + width, y + height), new Scalar(0, 255, 0, 255), 3);
-                x = x + width / 2;
-                y = y + height / 2;
-                area = blobs.get(i).area();
-                int[] point = rbVis.getBlobCenterCoordinates(blobs.get(i));
-
-                Imgproc.putText(mRgba, "[" + point[0] + "," + point[1] + "," + area.intValue() + "]", new Point(x + 4, y), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
-                Imgproc.circle(mRgba, new Point(x, y), 5, new Scalar(0, 255, 0, 255), -1);
-
-            }
-
-            if( blobs.size() > 0)
+            if( rawTarget != null)
             {
-                Rect rec = rbVis.getObjectTrackingRect();
+                /*---------------------------------------------------------------------------------*
+                 * Draw the raw target bounding rect.
+                 *--------------------------------------------------------------------------------*/
+                x = rawTarget[0] - (rawTarget[2] / 2);
+                y = rawTarget[1] - (rawTarget[3] / 2);
+
+                Imgproc.rectangle(mRgba, new Point(x, y), new Point(x + rawTarget[2], y + rawTarget[3]), new Scalar(0, 255, 0, 255), 3);
+
+                //Imgproc.circle(mRgba, new Point(rawTarget[0], rawTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
+
+                Rect rec = rbVis.getRegionOfInterestRect();
                 Imgproc.rectangle(mRgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
             }
-            double[] coord = rbVis.getKalmanTrackedCoordinates();
-
-            Imgproc.circle(mRgba, new Point((int)coord[0], (int)coord[1]), 5, new Scalar(0, 255, 255, 255), -1);
+            Imgproc.putText(mRgba, "[" + (int)filteredTarget[0] + "," + (int)filteredTarget[1] + "," + (int)(filteredTarget[4] * filteredTarget[5]) + "]", new Point((int)filteredTarget[0]+cols/2 + 4, -(int)filteredTarget[1]+rows/2), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
+            Imgproc.circle(mRgba, new Point((int)filteredTarget[0]+cols/2, -((int)filteredTarget[1]+rows/2)), 5, new Scalar(0, 255, 0, 255), -1);
 
             Mat colorLabel = mRgba.submat(4, 40, 4, 40);
             colorLabel.setTo(rbVis.getObjectColorRgb());

@@ -23,13 +23,16 @@ public class RobotVision
 {
    private CvCameraViewFrame currentImage;
    private int objectLostCount;
-   private static int OBJECT_TRACK_TIMEOUT = 10;
-   private static int TRACK_RECT_MAX_SCALAR = 2;
+   private static int OBJECT_TRACK_TIMEOUT = 100;
+   private static int TRACK_RECT_MAX_SCALAR = 3;
+   private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
    private State objectTrackState;
+   private State currentObjectTrackState;
    private Scalar objectColorHsv;
    private Scalar objectColorRgb;
-   private Rect objectTrackingRect;
-   private Rect objectTrackInitRect;
+   private Rect regionOfInterestRect;
+   private Rect initialRegionOfInterestRect;
+   private Rect rawTarget;
    private long prevNanoTime;
    private ColorBlobDetector mDetector;
    private KalmanFilter kalman;
@@ -40,6 +43,7 @@ public class RobotVision
    private int frameRows;
    private int frameCols;
    private Mat kalmanTrackedState;
+   private double[] filteredTargetWidthHeight;
 
    public enum State
    {
@@ -54,6 +58,7 @@ public class RobotVision
        * Declare a 4 state kalman filter where state 0 = x, state 1 = y, state 2 = x', and state 3=
        * y'.
        *------------------------------------------------------------------------------------------*/
+
       kalman             = new KalmanFilter(4, 2, 0, CvType.CV_32F);
       kalmanTransMatrix  = new Mat(4, 4, CvType.CV_32F, new Scalar(0));
       kalmanProcNoiseCov = new Mat(4, 4, CvType.CV_32F, new Scalar(0));
@@ -66,6 +71,7 @@ public class RobotVision
        * kalmanTransMatrix = | 0  1   0  dt |
        *                     | 0  0   1  0  |
        *                     | 0  0   0  1  |
+       *
        *------------------------------------------------------------------------------------------*/
       kalmanTransMatrix.put(0,0, 1.0);
       kalmanTransMatrix.put(0,1, 0.0);
@@ -86,6 +92,7 @@ public class RobotVision
       kalmanTransMatrix.put(3,1, 0.0);
       kalmanTransMatrix.put(3,2, 0.0);
       kalmanTransMatrix.put(3,3, 1.0);
+
       kalman.set_transitionMatrix(kalmanTransMatrix);
 
       /*--------------------------------------------------------------------------------------------
@@ -100,8 +107,9 @@ public class RobotVision
        * Observing the measurements directly so the H matrix is the identity.
        *------------------------------------------------------------------------------------------*/
       Core.setIdentity( meas);
-      Core.setIdentity( kalmanProcNoiseCov, Scalar.all(1e-4));
-      Core.setIdentity( kalmanMeasNoiseCov, Scalar.all(1e-3));
+      Core.setIdentity(kalmanProcNoiseCov, Scalar.all(1e-2));
+      Core.setIdentity(kalmanMeasNoiseCov, Scalar.all(1e-4));
+
       /*--------------------------------------------------------------------------------------------
        * We have known starting coordinates so set this value high.
        *------------------------------------------------------------------------------------------*/
@@ -116,14 +124,17 @@ public class RobotVision
 
       this.blobs = new ArrayList<Rect>();
       this.objectTrackState = State.OBJECT_IDLE;
+      this.currentObjectTrackState = State.OBJECT_IDLE;
       this.objectLostCount = 0;
       this.objectColorHsv = new Scalar(255);
       this.objectColorRgb = new Scalar(255);
-      this.objectTrackingRect = new Rect();
-      this.objectTrackInitRect = new Rect();
+      this.regionOfInterestRect = new Rect();
+      this.initialRegionOfInterestRect = new Rect();
       this.frameRows = height;
       this.frameCols = width;
       this.kalmanTrackedState = new Mat(4, 1, CvType.CV_32F, new Scalar(0));
+      this.rawTarget = new Rect();
+      filteredTargetWidthHeight = new double[4];
    }
 
    public ColorBlobDetector getBlobDetector()
@@ -149,41 +160,35 @@ public class RobotVision
    public void setObjectTrackInitRect(Rect trackRect)
    {
 
-      this.objectTrackInitRect = trackRect;
+      this.initialRegionOfInterestRect = trackRect;
    }
 
    public Rect getObjectTrackInitRect()
    {
-      return this.objectTrackInitRect;
+      return this.initialRegionOfInterestRect;
    }
 
-   public Rect getObjectTrackingRect()
+   public Rect getRegionOfInterestRect()
    {
       int cols = frameCols;
       int rows = frameRows;
-      Rect trackRect = new Rect();
+      Rect newRet = new Rect();
 
-      if( objectTrackingRect.x < 0)
-         trackRect.x = 0;
-      else
-         trackRect.x = objectTrackingRect.x;
+      newRet = regionOfInterestRect;
 
-      if( objectTrackingRect.y < 0)
-         trackRect.y = 0;
-      else
-         trackRect.y = objectTrackingRect.y;
+      if( newRet.x < 0)
+         newRet.x = 0;
 
-      if( (trackRect.x + objectTrackingRect.width) > cols)
-         trackRect.width = objectTrackingRect.width - ((trackRect.x + objectTrackingRect.width) - cols);
-      else
-         trackRect.width = objectTrackingRect.width;
+      if( newRet.x + newRet.width > cols)
+         newRet.width = cols - newRet.x;
 
-      if( (trackRect.y + objectTrackingRect.height) > rows)
-         trackRect.height = objectTrackingRect.height - ((trackRect.y + objectTrackingRect.height) - rows);
-      else
-         trackRect.height = objectTrackingRect.height;
+      if( newRet.y < 0)
+         newRet.y = 0;
 
-      return trackRect;
+      if( newRet.y + newRet.height > rows)
+         newRet.height = rows - newRet.y;
+
+      return newRet;
    }
 
    public void setObjectTrackState(State objectState)
@@ -193,9 +198,16 @@ public class RobotVision
 
    public State getObjectTrackState()
    {
-      return this.objectTrackState;
+      return this.currentObjectTrackState;
    }
 
+   public boolean isTargetLocked()
+   {
+      if( currentObjectTrackState == State.OBJECT_TRACK)
+         return true;
+      else
+         return false;
+   }
    public void setCameraImage(CvCameraViewFrame currentImage)
    {
       this.currentImage = currentImage;
@@ -206,12 +218,12 @@ public class RobotVision
       return this.currentImage;
    }
 
-   public void setBlobs(ArrayList<Rect> blobs)
+   private void setBlobs(ArrayList<Rect> blobs)
    {
       this.blobs = blobs;
    }
 
-   public ArrayList<Rect> getBlobs()
+   private ArrayList<Rect> getBlobs()
    {
       return this.blobs;
    }/*End getBlobs*/
@@ -240,19 +252,20 @@ public class RobotVision
       {
          case OBJECT_TRACK_INIT:
          {
+            this.currentObjectTrackState = State.OBJECT_TRACK_INIT;
               /*------------------------------------------------------------------------------------
                * Find the average bounding rectangle and average color within the bounds for the
                * desired object to track. Find the center coordinates of the bounding rectangle and
                * initialize a 4 state Kalman filter to track the object.
                *----------------------------------------------------------------------------------*/
-            Mat touchedRegionRgba = currentImage.rgba().submat(this.objectTrackInitRect);
+            Mat touchedRegionRgba = currentImage.rgba().submat(this.initialRegionOfInterestRect);
 
             Mat touchedRegionHsv = new Mat();
             Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
 
             // Calculate average color of touched region
             this.objectColorHsv = Core.sumElems(touchedRegionHsv);
-            int pointCount = this.objectTrackInitRect.width * this.objectTrackInitRect.height;
+            int pointCount = this.initialRegionOfInterestRect.width * this.initialRegionOfInterestRect.height;
             for(int i = 0; i < this.objectColorHsv.val.length; i++)
                this.objectColorHsv.val[i] /= pointCount;
 
@@ -293,8 +306,8 @@ public class RobotVision
                /*-----------------------------------------------------------------------------------
                 * If touched rect is inside the blob rect then its a match.
                 *---------------------------------------------------------------------------------*/
-               int centerx = this.objectTrackInitRect.x + this.objectTrackInitRect.width/2;
-               int centery = this.objectTrackInitRect.y + this.objectTrackInitRect.height/2;
+               int centerx = this.initialRegionOfInterestRect.x + this.initialRegionOfInterestRect.width/2;
+               int centery = this.initialRegionOfInterestRect.y + this.initialRegionOfInterestRect.height/2;
                boolean test1 = (centerx >= x) && (centerx <= (x + width));
                boolean test2 = (centery >= y) && (centery <= (y + height));
                if(test1 && test2)
@@ -317,25 +330,13 @@ public class RobotVision
                width = blobs.get(blobNumber).width;
                height = blobs.get(blobNumber).height;
 
-               //if( (x - width / TRACK_RECT_MAX_SCALAR) < 0)
-               //   this.objectTrackingRect.x = 0;
-               //else
-                  this.objectTrackingRect.x = (int)((double)x - (double)width*RACK_RECT_MAX_SCALAR/2);
+               filteredTargetWidthHeight[0] = width;
+               filteredTargetWidthHeight[1] = height;
 
-               //if( (y - height / TRACK_RECT_MAX_SCALAR) < 0)
-               //   this.objectTrackingRect.y = 0;
-               //else
-                  this.objectTrackingRect.y = (int)((double)y - (double)height*TRACK_RECT_MAX_SCALAR/2);
-
-               //if( (this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) > cols)
-               //   this.objectTrackingRect.width = width * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.x + width * TRACK_RECT_MAX_SCALAR) - cols);
-               //else
-                  this.objectTrackingRect.width = width * TRACK_RECT_MAX_SCALAR;
-
-               //if( (this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) > rows)
-               //   this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR - ((this.objectTrackingRect.y + height * TRACK_RECT_MAX_SCALAR) - rows);
-               //else
-                  this.objectTrackingRect.height = height * TRACK_RECT_MAX_SCALAR;
+               this.regionOfInterestRect.x = (int)((double)x + ((double) width / 2)  - ((double)width*TRACK_RECT_MAX_SCALAR/2));
+               this.regionOfInterestRect.y = (int)((double)y + ((double) height / 2) - ((double)height*TRACK_RECT_MAX_SCALAR/2));
+               this.regionOfInterestRect.width = width * TRACK_RECT_MAX_SCALAR;
+               this.regionOfInterestRect.height = height * TRACK_RECT_MAX_SCALAR;
 
                /*-----------------------------------------------------------------------------------
                 * Initialize the Kalman filter to the center coordinates of the object.
@@ -344,36 +345,39 @@ public class RobotVision
 
                statePred.put(0, 0, (double) x + (double) width / 2);
                statePred.put(1, 0, (double) y + (double) height / 2);
+               statePred.put(2, 0, (double)0.0f);
+               statePred.put(3, 0, (double) 0.0f);
+               kalmanTrackedState = statePred;
                kalman.set_statePre(statePred);
 
                /*-----------------------------------------------------------------------------------
                 * Update transition matrix dt
                 *---------------------------------------------------------------------------------*/
                kalmanTransMatrix.put(0, 2, deltaTimeSec);
-               kalmanTransMatrix.put(1,3, deltaTimeSec);
+               kalmanTransMatrix.put(1, 3, deltaTimeSec);
                kalman.set_transitionMatrix(kalmanTransMatrix);
 
-               double[][] trans = new double[4][4];
+               //double[][] trans = new double[4][4];
 
-               trans[0][0] = kalmanTransMatrix.get(0,0)[0];
-               trans[0][1] = kalmanTransMatrix.get(0,1)[0];
-               trans[0][2] = kalmanTransMatrix.get(0,2)[0];
-               trans[0][3] = kalmanTransMatrix.get(0,3)[0];
+               //trans[0][0] = kalmanTransMatrix.get(0,0)[0];
+               //trans[0][1] = kalmanTransMatrix.get(0,1)[0];
+               //trans[0][2] = kalmanTransMatrix.get(0,2)[0];
+               //trans[0][3] = kalmanTransMatrix.get(0,3)[0];
 
-               trans[1][0] = kalmanTransMatrix.get(1,0)[0];
-               trans[1][1] = kalmanTransMatrix.get(1,1)[0];
-               trans[1][2] = kalmanTransMatrix.get(1,2)[0];
-               trans[1][3] = kalmanTransMatrix.get(1,3)[0];
+               //trans[1][0] = kalmanTransMatrix.get(1,0)[0];
+               //trans[1][1] = kalmanTransMatrix.get(1,1)[0];
+               //trans[1][2] = kalmanTransMatrix.get(1,2)[0];
+               //trans[1][3] = kalmanTransMatrix.get(1,3)[0];
 
-               trans[2][0] = kalmanTransMatrix.get(2,0)[0];
-               trans[2][1] = kalmanTransMatrix.get(2,1)[0];
-               trans[2][2] = kalmanTransMatrix.get(2,2)[0];
-               trans[2][3] = kalmanTransMatrix.get(2,3)[0];
+               //trans[2][0] = kalmanTransMatrix.get(2,0)[0];
+               //trans[2][1] = kalmanTransMatrix.get(2,1)[0];
+               //trans[2][2] = kalmanTransMatrix.get(2,2)[0];
+               //trans[2][3] = kalmanTransMatrix.get(2,3)[0];
 
-               trans[3][0] = kalmanTransMatrix.get(3,0)[0];
-               trans[3][1] = kalmanTransMatrix.get(3,1)[0];
-               trans[3][2] = kalmanTransMatrix.get(3,2)[0];
-               trans[3][3] = kalmanTransMatrix.get(3,3)[0];
+               //trans[3][0] = kalmanTransMatrix.get(3,0)[0];
+               //trans[3][1] = kalmanTransMatrix.get(3,1)[0];
+               //trans[3][2] = kalmanTransMatrix.get(3,2)[0];
+               //trans[3][3] = kalmanTransMatrix.get(3,3)[0];
 
                /*-----------------------------------------------------------------------------------
                 * We have known starting coordinates so set this value high.
@@ -391,6 +395,14 @@ public class RobotVision
          }
          case OBJECT_TRACK:
          {
+            this.currentObjectTrackState = State.OBJECT_TRACK;
+
+            Rect target = findTarget();
+            int x = (int)kalmanTrackedState.get(0,0)[0];
+            int y = (int)kalmanTrackedState.get(1,0)[0];
+            double dx = kalmanTrackedState.get(2,0)[0];
+            double dy = kalmanTrackedState.get(3,0)[0];
+
               /*------------------------------------------------------------------------------------
                * Track the location of the object using a Kalman filter. Use the qualtiy of the
                * covariance matrix to adjust the size of the "tracking" bounding rectangle i.e. i
@@ -398,7 +410,6 @@ public class RobotVision
                * small. If the blob detection algorithm hasn't identified the object for a preset
                * period of time, go to the object lost state.
                *----------------------------------------------------------------------------------*/
-            ArrayList<Rect> blobs = this.findBlobs(currentImage, true);
 
             /*--------------------------------------------------------------------------------------
              * Update transition matrix dt
@@ -407,35 +418,44 @@ public class RobotVision
             kalmanTransMatrix.put(1,3, deltaTimeSec);
             kalman.set_transitionMatrix(kalmanTransMatrix);
 
-            /*--------------------------------------------------------------------------------------
-             * Kalman prediction...
-             *------------------------------------------------------------------------------------*/
-            Mat predCord = kalman.predict();
-
-            if( blobs.size() > 0)
+            if( target != null)
             {
                /*-----------------------------------------------------------------------------------
                 * Kalman measurement update...
                 *---------------------------------------------------------------------------------*/
-               kalmanMeas.put( 0, 0, (double)blobs.get(0).x + (double)blobs.get(0).width/2);
-               kalmanMeas.put( 1, 0, (double)blobs.get(0).y + (double)blobs.get(0).height/2);
+               kalmanMeas.put( 0, 0, (double)target.x + (double)target.width/2);
+               kalmanMeas.put( 1, 0, (double)target.y + (double)target.height/2);
                kalmanTrackedState = kalman.correct( kalmanMeas);
+               this.objectLostCount = 0;
+               /*-----------------------------------------------------------------------------------
+                * Move the object tracking rectangle based on the Kalman estimate coordinates.
+                *---------------------------------------------------------------------------------*/
+               x = (int)kalmanTrackedState.get(0,0)[0];
+               y = (int)kalmanTrackedState.get(1,0)[0];
+               dx = kalmanTrackedState.get(2,0)[0];
+               dy = kalmanTrackedState.get(3,0)[0];
+
+               filteredTargetWidthHeight[0] = filteredTargetWidthHeight[0]*( 1 - 1/HEIGHT_WIDTH_FILTER_AMOUNT) + (double)target.width*(1/HEIGHT_WIDTH_FILTER_AMOUNT);
+               filteredTargetWidthHeight[1] = filteredTargetWidthHeight[1]*( 1 - 1/HEIGHT_WIDTH_FILTER_AMOUNT) + (double)target.height*(1/HEIGHT_WIDTH_FILTER_AMOUNT);
+
+               regionOfInterestRect.x = x - ((int)filteredTargetWidthHeight[0]*TRACK_RECT_MAX_SCALAR)/2;
+               regionOfInterestRect.y = y - ((int)filteredTargetWidthHeight[1]*TRACK_RECT_MAX_SCALAR)/2;
+
+               regionOfInterestRect.width  = (int)filteredTargetWidthHeight[0]*TRACK_RECT_MAX_SCALAR;
+               regionOfInterestRect.height = (int)filteredTargetWidthHeight[1]*TRACK_RECT_MAX_SCALAR;
             }
             else
             {
                /*-----------------------------------------------------------------------------------
                 * Blob not detected use the predicted measurement as the estimate.
                 *---------------------------------------------------------------------------------*/
-               kalmanTrackedState = predCord;
                this.objectLostCount++;
             }
 
             /*--------------------------------------------------------------------------------------
-             * Move the object tracking rectangle based on the Kalman estimate coordinates.
+             * Kalman prediction...
              *------------------------------------------------------------------------------------*/
-
-            objectTrackingRect.x = (int)kalmanTrackedState.get(0,0)[0] - objectTrackingRect.width/2;
-            objectTrackingRect.y = (int)kalmanTrackedState.get(1,0)[0] - objectTrackingRect.height/2;
+            kalmanTrackedState = kalman.predict();
 
             if(this.objectLostCount == OBJECT_TRACK_TIMEOUT)
             {
@@ -445,10 +465,12 @@ public class RobotVision
             break;/*End case OBJECT_TRACK:*/
          }
          case OBJECT_LOST:
+            this.currentObjectTrackState = State.OBJECT_LOST;
             this.objectLostCount = 0;
             break;/*End case OBJECT_LOST:*/
 
          case OBJECT_IDLE:
+            this.currentObjectTrackState = State.OBJECT_IDLE;
             /*--------------------------------------------------------------------------------------
              * This state is entered after boot, waiting for user to touch an object.
              *------------------------------------------------------------------------------------*/
@@ -469,25 +491,43 @@ public class RobotVision
 
    }/*End updateObjectTrack*/
 
-   public double[] getKalmanTrackedCoordinates( )
+   private double[] getFilteredTargetCoordsAbsolute( )
    {
-      double cols = (double)frameCols;
-      double rows = (double)frameRows;
       double x = kalmanTrackedState.get(0,0)[0];
       double y = kalmanTrackedState.get(1,0)[0];
       double dx = kalmanTrackedState.get(2,0)[0];
       double dy = kalmanTrackedState.get(3,0)[0];
-      return new double[]{x,y,dx,dy};
+
+      return new double[]{x,y,dx,dy, filteredTargetWidthHeight[0], filteredTargetWidthHeight[1]};
    }
 
-   public int[] getBlobCenterCoordinates( Rect blob)
+   public double[] getFilteredTargetCoords( )
    {
       int cols = frameCols;
       int rows = frameRows;
+      double x = kalmanTrackedState.get(0,0)[0] - (double)cols/2;
+      double y = kalmanTrackedState.get(1,0)[0] - (double)rows/2;
+      double dx = kalmanTrackedState.get(2,0)[0];
+      double dy = kalmanTrackedState.get(3,0)[0];
 
-      return new int[]{(blob.x + blob.width/2) - cols / 2, (blob.y + blob.height/2) - rows / 2};
+      return new double[]{x,-y,dx,dy, filteredTargetWidthHeight[0], filteredTargetWidthHeight[1]};
    }
-   public Scalar getBlobColor(Rect blob)
+
+   public int[] getRawTargetCoords( )
+   {
+      if( rawTarget != null)
+      {
+         int x = rawTarget.x;
+         int y = rawTarget.y;
+         int width = rawTarget.width;
+         int height = rawTarget.height;
+         return new int[]{(int) x + (width / 2), (int) y + (height / 2), (int) width, (int) height};
+      }
+      else
+         return null;
+   }
+
+   private Scalar getBlobColor(Rect blob)
    {
       int x;
       int y;
@@ -513,18 +553,72 @@ public class RobotVision
       return mBlobColorHsv;
    }
 
-   public ArrayList<Rect> findBlobs(CvCameraViewFrame currentImage, boolean useSubMat)
+   private Rect findTarget()
+   {
+      /*--------------------------------------------------------------------------------------------
+       * Find the blob in the region that was touched.
+       *------------------------------------------------------------------------------------------*/
+      List<Rect> blobs = this.findBlobs(currentImage, true);
+
+      Double area;
+      int x;
+      int y;
+      int width;
+      int height;
+      boolean objectMatch = false;
+      int blobNumber = 0;
+      double[] kalmanCoords = getFilteredTargetCoordsAbsolute();
+
+      double maxArea = 0;
+
+      for(int i = 0; i < blobs.size(); i++)
+      {
+         //Scalar blobColor = g.getBlobColor(blobs.get(i));
+         x = blobs.get(i).x;
+         y = blobs.get(i).y;
+         width = blobs.get(i).width;
+         height = blobs.get(i).height;
+         area = blobs.get(i).area();
+         x = x + width/2;
+         y = y + height/2;
+         /*-----------------------------------------------------------------------------------------
+          * If kalman center is inside the blob rect then its a match.
+          *---------------------------------------------------------------------------------------*/
+         //int centerx = (int)kalmanCoords[0];
+         //int centery = (int)kalmanCoords[1];
+         //boolean test1 = (centerx >= x) && (centerx <= (x + width));
+         //boolean test2 = (centery >= y) && (centery <= (y + height));
+         if(area > maxArea)
+         {
+            maxArea = area;
+            objectMatch = true;
+            blobNumber = i;
+            //break;
+         }
+      }
+
+      if( maxArea > 0)
+      {
+         rawTarget = blobs.get(blobNumber);
+         return blobs.get(blobNumber);
+      }
+      else
+      {
+         rawTarget = null;
+         return null;
+      }
+   }
+
+   private ArrayList<Rect> findBlobs(CvCameraViewFrame currentImage, boolean useSubMat)
    {
       int cols = currentImage.rgba().cols();
       int rows = currentImage.rgba().rows();
+      Rect newRect = getRegionOfInterestRect();
 
       if( useSubMat)
       {
-
-         Mat trackedRgba = currentImage.rgba().submat(this.objectTrackingRect);
+         Mat trackedRgba = currentImage.rgba().submat(newRect);
          this.mDetector.process(trackedRgba);
-         //cols = trackedRgba.cols();
-         //rows = trackedRgba.rows();
       }
       else
          this.mDetector.process(currentImage.rgba());
@@ -555,8 +649,8 @@ public class RobotVision
 
          if( useSubMat)
          {
-            rect.x = rect.x + this.objectTrackingRect.x;
-            rect.y = rect.y + this.objectTrackingRect.y;
+            rect.x = rect.x + newRect.x;
+            rect.y = rect.y + newRect.y;
          }
 
          addresses.add(rect);

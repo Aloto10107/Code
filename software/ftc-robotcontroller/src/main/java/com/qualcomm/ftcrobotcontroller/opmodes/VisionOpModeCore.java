@@ -110,8 +110,6 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
                 SPECTRUM_SIZE = new Size(100, 35);
                 CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
 
-
-
                 mOpenCvCameraView = (CameraBridgeViewBase) activity.findViewById(R.id.robot_vision_view);
                 mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
                 mOpenCvCameraView.setCvCameraViewListener(t);
