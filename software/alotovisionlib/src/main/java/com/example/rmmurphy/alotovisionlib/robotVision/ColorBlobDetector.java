@@ -18,7 +18,7 @@ public class ColorBlobDetector {
     // Minimum contour area in percent for contours filtering
     private static double mMinContourArea = 0.1;
     // Color radius for range checking in HSV color space
-    private Scalar mColorRadius = new Scalar(25, 50, 50, 0);
+    private Scalar mColorRadius = new Scalar(15, 15, 15, 0);
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
 
@@ -27,6 +27,7 @@ public class ColorBlobDetector {
     Mat mHsvMat = new Mat();
     Mat mMask = new Mat();
     Mat mDilatedMask = new Mat();
+    Mat mErodeMask = new Mat();
     Mat mHierarchy = new Mat();
 
     public void setColorRadius(Scalar radius) {
@@ -74,7 +75,9 @@ public class ColorBlobDetector {
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
 
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
-        Imgproc.dilate(mMask, mDilatedMask, new Mat());
+
+        Imgproc.erode(mMask, mErodeMask, new Mat());
+        Imgproc.dilate(mErodeMask, mDilatedMask, new Mat());
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 

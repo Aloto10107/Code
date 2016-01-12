@@ -44,10 +44,14 @@ public abstract class VisionOpMode extends VisionOpModeCore {
         int cols = rgba.cols();
         int rows = rgba.rows();
 
-      /*--------------------------------------------------------------------------------------------
-       * Track the color, coordinates, and area of the selected object.
-       *------------------------------------------------------------------------------------------*/
+        /*------------------------------------------------------------------------------------------
+         * Track the color, coordinates, and area of the selected object.
+         *----------------------------------------------------------------------------------------*/
         rbVis.updateObjectTrack(inputFrame);
+
+        Rect touchedRect = rbVis.getObjectTrackInitRect();
+
+        Imgproc.rectangle(rgba, new Point(touchedRect.x, touchedRect.y), new Point(touchedRect.x + touchedRect.width, touchedRect.y + touchedRect.height), new Scalar(255, 0, 0, 255), 3);
 
         if (rbVis.isTargetLocked())
         {
@@ -61,16 +65,17 @@ public abstract class VisionOpMode extends VisionOpModeCore {
 
             int[] rawTarget = rbVis.getRawTargetCoords();
             double[] filteredTarget = rbVis.getFilteredTargetCoords();
+            double[] filteredAbsTarget = rbVis.getFilteredTargetCoordsAbsolute();
 
             if( rawTarget != null)
             {
                 /*---------------------------------------------------------------------------------*
                  * Draw the raw target bounding rect.
                  *--------------------------------------------------------------------------------*/
-                x = rawTarget[0] - (rawTarget[2] / 2);
-                y = rawTarget[1] - (rawTarget[3] / 2);
+                x = (int)(filteredAbsTarget[0] - (filteredAbsTarget[4] / 2));
+                y = (int)(filteredAbsTarget[1] - (filteredAbsTarget[5] / 2));
 
-                Imgproc.rectangle(rgba, new Point(x, y), new Point(x + rawTarget[2], y + rawTarget[3]), new Scalar(0, 255, 0, 255), 3);
+                Imgproc.rectangle(rgba, new Point(x, y), new Point(x + (int)filteredAbsTarget[4], y + (int)filteredAbsTarget[5]), new Scalar(0, 255, 0, 255), 3);
 
                 //Imgproc.circle(mRgba, new Point(rawTarget[0], rawTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
 
@@ -78,7 +83,7 @@ public abstract class VisionOpMode extends VisionOpModeCore {
                 Imgproc.rectangle(rgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
             }
             Imgproc.putText(rgba, "[" + (int)filteredTarget[0] + "," + (int)filteredTarget[1] + "," + (int)(filteredTarget[4] * filteredTarget[5]) + "]", new Point((int)filteredTarget[0]+cols/2 + 4, -(int)filteredTarget[1]+rows/2), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
-            Imgproc.circle(rgba, new Point((int)filteredTarget[0]+cols/2, -((int)filteredTarget[1]+rows/2)), 5, new Scalar(0, 255, 0, 255), -1);
+            Imgproc.circle(rgba, new Point((int)filteredAbsTarget[0], filteredAbsTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
 
             Mat colorLabel = rgba.submat(4, 40, 4, 40);
             colorLabel.setTo(rbVis.getObjectColorRgb());

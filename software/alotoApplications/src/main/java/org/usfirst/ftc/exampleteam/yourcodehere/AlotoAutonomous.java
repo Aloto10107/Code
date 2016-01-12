@@ -44,6 +44,16 @@ import java.util.ArrayList;
  */
 public class AlotoAutonomous extends VisionOpMode {
 
+    private double objectXCoord;
+    private double objectYCoord;
+    private double objectdx;
+    private double objectdy;
+    private double objectWidth;
+    private double objectHeight;
+    private double Kp;
+    private double Ki;
+    private double Kd;
+
     @Override
     public void init() {
         super.init();
@@ -60,7 +70,14 @@ public class AlotoAutonomous extends VisionOpMode {
         {
             int[] rawTarget = rbVis.getRawTargetCoords();
             double[] filteredTarget = rbVis.getFilteredTargetCoords();
-            telemetry.addData("Coords:", "x: " + (int)filteredTarget[0] + " y: " + (int)filteredTarget[1] + " area: " + (int)(filteredTarget[4]*filteredTarget[5]));
+            objectXCoord     = filteredTarget[0];
+            objectYCoord     = filteredTarget[1];
+            objectdx    = filteredTarget[2];
+            objectdy     = filteredTarget[3];
+            objectWidth  = filteredTarget[4];
+            objectHeight = filteredTarget[5];
+
+            telemetry.addData("Coords:", "x: " + (int)objectXCoord + " y: " + (int)objectYCoord + " area: " + (int)(objectWidth*objectHeight));
         }
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
@@ -70,5 +87,11 @@ public class AlotoAutonomous extends VisionOpMode {
     @Override
     public void stop() {
         super.stop();
+    }
+
+    private double motorControlPID( double error)
+    {
+        double motorPower = 0.0f;
+        return motorPower;
     }
 }

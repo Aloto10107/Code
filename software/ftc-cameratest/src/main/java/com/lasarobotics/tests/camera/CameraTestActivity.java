@@ -41,6 +41,9 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
     private Mat mSpectrum;
     private Size SPECTRUM_SIZE;
     private Scalar CONTOUR_COLOR;
+    private boolean waitFirstTouch = true;
+    private int firstTouchX;
+    private int firstTouchY;
 
     private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -73,6 +76,7 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
         Camera cam = Cameras.PRIMARY.createCamera();
         android.hardware.Camera.Parameters pam = cam.getCamera().getParameters();
         focalLength = pam.getFocalLength();
+
         cam.release();
 
         //GET OBJECT IMAGE
@@ -153,6 +157,8 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
         SPECTRUM_SIZE = new Size(100, 35);
         CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
 
+        waitFirstTouch = true;
+
       /*--------------------------------------------------------------------------------------------
        * Call robot vision init here so that the opencv native bindings have been declared after the
        * camera starts.
@@ -170,31 +176,83 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
         int cols = mRgba.cols();
         int rows = mRgba.rows();
 
-        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
-        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+        rbVis.setObjectTrackState(RobotVision.State.OBJECT_IDLE);
 
-        int x = (int) event.getX() - xOffset;
-        int y = (int) event.getY() - yOffset;
+        if( rbVis.getObjectTrackState() == RobotVision.State.OBJECT_IDLE )
+        {
+            int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
+            int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 
-        if((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+            int x = (int) event.getX() - xOffset;
+            int y = (int) event.getY() - yOffset;
 
-        Rect touchedRect = new Rect();
+            if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
 
-        touchedRect.x = (x > 8) ? x - 8 : 0;
-        touchedRect.y = (y > 8) ? y - 8 : 0;
+            if(waitFirstTouch)
+            {
+                firstTouchX = x;
+                firstTouchY = y;
+                waitFirstTouch = false;
+            }
+            else
+            {
+                waitFirstTouch = true;
 
-        touchedRect.width = (x + 8 < cols) ? x + 8 - touchedRect.x : cols - touchedRect.x;
-        touchedRect.height = (y + 8 < rows) ? y + 8 - touchedRect.y : rows - touchedRect.y;
+                if( (x > firstTouchX) && (y > firstTouchY))
+                {
+                    Rect touchedRect = new Rect();
+                    touchedRect.x = firstTouchX;
+                    touchedRect.y = firstTouchY;
 
-      /*--------------------------------------------------------------------------------------------
-       * Set the object tracker to the initialization state. On the next camera frame event this
-       * state will be entered.
-       *------------------------------------------------------------------------------------------*/
-        rbVis.setObjectTrackInitRect(touchedRect);
-        rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
+                    touchedRect.width = x - firstTouchX;
+                    touchedRect.height = y - firstTouchY;
 
+                    /*------------------------------------------------------------------------------
+                     * Set the object tracker to the initialization state. On the next camera frame
+                     * event this state will be entered.
+                     *----------------------------------------------------------------------------*/
+                    rbVis.setObjectTrackInitRect(touchedRect);
+                    rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
+                }
+            }
+        }
         return false; // don't need subsequent touch events
     }
+
+/*    public boolean onTouch(View v, MotionEvent event)
+    {
+        int cols = mRgba.cols();
+        int rows = mRgba.rows();
+
+        rbVis.setObjectTrackState(RobotVision.State.OBJECT_IDLE);
+
+        if( rbVis.getObjectTrackState() == RobotVision.State.OBJECT_IDLE )
+        {
+            int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
+            int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+
+            int x = (int) event.getX() - xOffset;
+            int y = (int) event.getY() - yOffset;
+
+            if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+
+            Rect touchedRect = new Rect();
+
+            touchedRect.x = (x > 16) ? x - 16 : 0;
+            touchedRect.y = (y > 16) ? y - 16 : 0;
+
+            touchedRect.width = (x + 16 < cols) ? x + 16 - touchedRect.x : cols - touchedRect.x;
+            touchedRect.height = (y + 16 < rows) ? y + 16 - touchedRect.y : rows - touchedRect.y;
+
+      *//*--------------------------------------------------------------------------------------------
+       * Set the object tracker to the initialization state. On the next camera frame event this
+       * state will be entered.
+       *------------------------------------------------------------------------------------------*//*
+            rbVis.setObjectTrackInitRect(touchedRect);
+            rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
+        }
+        return false; // don't need subsequent touch events
+    }*/
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame)
     {
@@ -209,7 +267,7 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
 
         Rect touchedRect = rbVis.getObjectTrackInitRect();
 
-        Imgproc.circle(mRgba, new Point((int) touchedRect.x + touchedRect.width / 2, touchedRect.y + touchedRect.height / 2), 5, new Scalar(255, 0, 0, 255), -1);
+        Imgproc.rectangle(mRgba, new Point(touchedRect.x, touchedRect.y), new Point(touchedRect.x + touchedRect.width, touchedRect.y + touchedRect.height), new Scalar(255, 0, 0, 255), 3);
 
         if (rbVis.isTargetLocked())
         {
@@ -223,16 +281,17 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
 
             int[] rawTarget = rbVis.getRawTargetCoords();
             double[] filteredTarget = rbVis.getFilteredTargetCoords();
+            double[] filteredAbsTarget = rbVis.getFilteredTargetCoordsAbsolute();
 
             if( rawTarget != null)
             {
                 /*---------------------------------------------------------------------------------*
                  * Draw the raw target bounding rect.
                  *--------------------------------------------------------------------------------*/
-                x = rawTarget[0] - (rawTarget[2] / 2);
-                y = rawTarget[1] - (rawTarget[3] / 2);
+                x = (int)(filteredAbsTarget[0] - (filteredAbsTarget[4] / 2));
+                y = (int)(filteredAbsTarget[1] - (filteredAbsTarget[5] / 2));
 
-                Imgproc.rectangle(mRgba, new Point(x, y), new Point(x + rawTarget[2], y + rawTarget[3]), new Scalar(0, 255, 0, 255), 3);
+                Imgproc.rectangle(mRgba, new Point(x, y), new Point(x + (int)filteredAbsTarget[4], y + (int)filteredAbsTarget[5]), new Scalar(0, 255, 0, 255), 3);
 
                 //Imgproc.circle(mRgba, new Point(rawTarget[0], rawTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
 
@@ -240,7 +299,7 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
                 Imgproc.rectangle(mRgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
             }
             Imgproc.putText(mRgba, "[" + (int)filteredTarget[0] + "," + (int)filteredTarget[1] + "," + (int)(filteredTarget[4] * filteredTarget[5]) + "]", new Point((int)filteredTarget[0]+cols/2 + 4, -(int)filteredTarget[1]+rows/2), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
-            Imgproc.circle(mRgba, new Point((int)filteredTarget[0]+cols/2, -((int)filteredTarget[1]+rows/2)), 5, new Scalar(0, 255, 0, 255), -1);
+            Imgproc.circle(mRgba, new Point((int)filteredAbsTarget[0], filteredAbsTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
 
             Mat colorLabel = mRgba.submat(4, 40, 4, 40);
             colorLabel.setTo(rbVis.getObjectColorRgb());

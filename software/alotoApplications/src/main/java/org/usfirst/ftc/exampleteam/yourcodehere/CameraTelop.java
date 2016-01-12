@@ -246,6 +246,8 @@ public class CameraTelop extends VisionOpMode {
 
 		double x;
 		double y;
+		double dx;
+		double dy;
 		double width;
 		double height;
 		double area;
@@ -257,12 +259,14 @@ public class CameraTelop extends VisionOpMode {
 
 			x = filteredTarget[0];
 			y = filteredTarget[1];
+			dx = filteredTarget[2];
+			dy = filteredTarget[3];
 			width = filteredTarget[4];
 			height = filteredTarget[5];
 
 			area = width*height;
-			telemetry.addData("Coords:", "x: " + x + " y: " + y+ " area: " + area);
-
+			telemetry.addData("Coords:", "x: " + (int)x + " y: " + (int)y+ " area: " + (int)area);
+			telemetry.addData("Image velocity:", "dx: " + dx + " dy: " + dy);
 			if( area < 20000){
 
 				double error = (double)(0 - x)/200;

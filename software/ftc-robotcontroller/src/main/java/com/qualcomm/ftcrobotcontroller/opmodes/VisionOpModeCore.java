@@ -31,6 +31,10 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
     private static CameraBridgeViewBase openCVCamera;
     private static boolean initialized = false;
     private static boolean openCVInitialized = false;
+    private boolean waitFirstTouch = true;
+    private int firstTouchX = 0;
+    private int firstTouchY = 0;
+
     private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(hardwareMap.appContext) {
         @Override
         public void onManagerConnected(int status) {
@@ -123,6 +127,7 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
 
                 rbVis = new RobotVision(width, height);
                 initialized = true;
+                waitFirstTouch = true;
             }
         });
 
@@ -166,28 +171,46 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
         int cols = rbVis.getCameraImage().rgba().cols();
         int rows = rbVis.getCameraImage().rgba().rows();
 
-        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
-        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+        rbVis.setObjectTrackState(RobotVision.State.OBJECT_IDLE);
 
-        int x = (int) event.getX() - xOffset;
-        int y = (int) event.getY() - yOffset;
+        if( rbVis.getObjectTrackState() == RobotVision.State.OBJECT_IDLE )
+        {
+            int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
+            int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 
-        if((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+            int x = (int) event.getX() - xOffset;
+            int y = (int) event.getY() - yOffset;
 
-        Rect touchedRect = new Rect();
+            if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
 
-        touchedRect.x = (x > 8) ? x - 8 : 0;
-        touchedRect.y = (y > 8) ? y - 8 : 0;
+            if(waitFirstTouch)
+            {
+                firstTouchX = x;
+                firstTouchY = y;
+                waitFirstTouch = false;
+            }
+            else
+            {
+                waitFirstTouch = true;
 
-        touchedRect.width = (x + 8 < cols) ? x + 8 - touchedRect.x : cols - touchedRect.x;
-        touchedRect.height = (y + 8 < rows) ? y + 8 - touchedRect.y : rows - touchedRect.y;
+                if( (x > firstTouchX) && (y > firstTouchY))
+                {
+                    Rect touchedRect = new Rect();
+                    touchedRect.x = firstTouchX;
+                    touchedRect.y = firstTouchY;
 
-      /*--------------------------------------------------------------------------------------------
-       * Set the object tracker to the initialization state. On the next camera frame event this
-       * state will be entered.
-       *------------------------------------------------------------------------------------------*/
-        rbVis.setObjectTrackInitRect(touchedRect);
-        rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
+                    touchedRect.width = x - firstTouchX;
+                    touchedRect.height = y - firstTouchY;
+
+                    /*------------------------------------------------------------------------------
+                     * Set the object tracker to the initialization state. On the next camera frame
+                     * event this state will be entered.
+                     *----------------------------------------------------------------------------*/
+                    rbVis.setObjectTrackInitRect(touchedRect);
+                    rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
+                }
+            }
+        }
 
         return false; // don't need subsequent touch events
     }
