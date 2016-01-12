@@ -38,14 +38,20 @@ public class ColorBlobDetector {
         double minH = (hsvColor.val[0] >= mColorRadius.val[0]) ? hsvColor.val[0] - mColorRadius.val[0] : 0;
         double maxH = (hsvColor.val[0] + mColorRadius.val[0] <= 255) ? hsvColor.val[0] + mColorRadius.val[0] : 255;
 
+        double minS = (hsvColor.val[1] >= mColorRadius.val[1]) ? hsvColor.val[1] - mColorRadius.val[1] : 0;
+        double maxS = (hsvColor.val[1] + mColorRadius.val[1] <= 255) ? hsvColor.val[1] + mColorRadius.val[1] : 255;
+
+        double minV = (hsvColor.val[2] >= mColorRadius.val[2]) ? hsvColor.val[2] - mColorRadius.val[2] : 0;
+        double maxV = (hsvColor.val[2] + mColorRadius.val[2] <= 255) ? hsvColor.val[2] + mColorRadius.val[2] : 255;
+
         mLowerBound.val[0] = minH;
         mUpperBound.val[0] = maxH;
 
-        mLowerBound.val[1] = hsvColor.val[1] - mColorRadius.val[1];
-        mUpperBound.val[1] = hsvColor.val[1] + mColorRadius.val[1];
+        mLowerBound.val[1] = minS;
+        mUpperBound.val[1] = maxS;
 
-        mLowerBound.val[2] = hsvColor.val[2] - mColorRadius.val[2];
-        mUpperBound.val[2] = hsvColor.val[2] + mColorRadius.val[2];
+        mLowerBound.val[2] = minV;
+        mUpperBound.val[2] = maxV;
 
         mLowerBound.val[3] = 0;
         mUpperBound.val[3] = 255;
