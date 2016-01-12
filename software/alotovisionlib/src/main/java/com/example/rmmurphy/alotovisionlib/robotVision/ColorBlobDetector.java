@@ -5,6 +5,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -82,8 +83,8 @@ public class ColorBlobDetector {
 
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
 
-        Imgproc.erode(mMask, mErodeMask, new Mat());
-        Imgproc.dilate(mErodeMask, mDilatedMask, new Mat());
+        Imgproc.erode(mMask, mErodeMask, Imgproc.getStructuringElement(Imgproc.MORPH_CROSS, new Size(5, 5)));
+        Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_CROSS, new Size(5, 5)));
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 
