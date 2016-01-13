@@ -33,6 +33,7 @@ package org.usfirst.ftc.exampleteam.yourcodehere;
 
 import com.qualcomm.ftcrobotcontroller.opmodes.VisionOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.Range;
 
 import org.opencv.core.Rect;
 import org.swerverobotics.library.ClassFactory;
@@ -56,6 +57,10 @@ public class AlotoAutonomous extends VisionOpMode {
     private double Ki;
     private double Kd;
     private double KiIntegral;
+    private double rotationalPower;
+    private double linearPower;
+    private double xCoordinateSetpoint;
+    private double yCoordinateSetpoint;
 
     DcMotor FrontmotorRight;
     DcMotor FrontmotorLeft;
@@ -79,63 +84,81 @@ public class AlotoAutonomous extends VisionOpMode {
 
         //this.setCamera(Cameras.PRIMARY);
         //this.setFrameSize(new Size(400, 400));
-        KiIntegral = 0;
-        Ki = .001;
-        Kp = .04/8;
+        KiIntegral = 0f;
+        Ki         = 0.0002f;
+        Kp         = .04f/2;
 
+        linearPower         = 0.0f;
+        rotationalPower     = 0.0f;
+        xCoordinateSetpoint = 0.0f;
+        yCoordinateSetpoint = 0.0f;
     }
 
     @Override
-    public void loop() {
+    public void loop()
+    {
         super.loop();
 
         //float Ki = -gamepad1.left_stick_y/100;
 
         //if( Ki < 0.0f)
         //    Ki = 0.0f;
-
+        /*------------------------------------------------------------------------------------------
+         * If the Robot Vision library has the target locked then drive robot to desired location.
+         *----------------------------------------------------------------------------------------*/
         if( rbVis.isTargetLocked() == true)
         {
-            int[] rawTarget = rbVis.getRawTargetCoords();
+            int[] rawTarget         = rbVis.getRawTargetCoords();
             double[] filteredTarget = rbVis.getFilteredTargetCoords();
-            objectXCoord     = filteredTarget[0];
-            objectYCoord     = filteredTarget[1];
-            objectdx    = filteredTarget[2];
+            objectXCoord = filteredTarget[0];
+            objectYCoord = filteredTarget[1];
+            objectdx     = filteredTarget[2];
             objectdy     = filteredTarget[3];
             objectWidth  = filteredTarget[4];
             objectHeight = filteredTarget[5];
 
-            double posError = 0.0f - (double)objectXCoord;
-            double motorPower = motorControlPID( posError);
+            rotationalPower = motorPIDController(xCoordinateSetpoint, objectXCoord);
 
-            KiIntegral = KiIntegral + posError*Ki;
-            motorPower = KiIntegral + posError*Kp;
+            driveRobot(linearPower, rotationalPower);
 
-                FrontmotorRight.setPower(motorPower);
-                BackmotorRight.setPower(motorPower);
-                FrontmotorLeft.setPower(-motorPower);
-                BackmotorLeft.setPower(-motorPower);
-
-            telemetry.addData("Position Error: ", posError);
-            telemetry.addData("Motor power: ", motorPower);
+            telemetry.addData("Position Error: ", xCoordinateSetpoint - objectXCoord);
+            telemetry.addData("Motor power: ", rotationalPower);
             telemetry.addData("Coords:", "x: " + (int) objectXCoord + " y: " + (int) objectYCoord + " area: " + (int) (objectWidth * objectHeight));
+        }
+        else
+        {
+            driveRobot(0,0);
         }
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
         telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);
         telemetry.addData("Kp: ", Kp);
         telemetry.addData("Ki: ", Ki);
+        telemetry.addData("Integral Error: ", KiIntegral);
 
     }
 
     @Override
-    public void stop() {
+    public void stop()
+    {
         super.stop();
     }
 
-    private double motorControlPID( double error)
+    private void driveRobot( double linearPower, double rotationalPower)
+    {
+        double rightPower = Range.clip(linearPower + rotationalPower, -1, 1);
+        double leftPower = Range.clip(linearPower - rotationalPower, -1, 1);
+
+        FrontmotorRight.setPower(rightPower);
+        BackmotorRight.setPower(rightPower);
+        FrontmotorLeft.setPower(leftPower);
+        BackmotorLeft.setPower(leftPower);
+    }
+
+    private double motorPIDController( double setPoint, double measurement)
     {
         double motorPower = 0.0f;
+        double error = setPoint - measurement;
 
         KiIntegral = KiIntegral + error*Ki;
         motorPower = KiIntegral + error*Kp;
