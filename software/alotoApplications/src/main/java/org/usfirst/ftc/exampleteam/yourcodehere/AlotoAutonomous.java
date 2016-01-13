@@ -61,6 +61,7 @@ public class AlotoAutonomous extends VisionOpMode {
     private double linearPower;
     private double xCoordinateSetpoint;
     private double yCoordinateSetpoint;
+    private double prevError;
 
     DcMotor FrontmotorRight;
     DcMotor FrontmotorLeft;
@@ -84,14 +85,17 @@ public class AlotoAutonomous extends VisionOpMode {
 
         //this.setCamera(Cameras.PRIMARY);
         //this.setFrameSize(new Size(400, 400));
-        KiIntegral = 0f;
-        Ki         = 0.0002f;
-        Kp         = .04f/2;
 
-        linearPower         = 0.0f;
-        rotationalPower     = 0.0f;
+        Ki = .0001f;
+        Kp = .001f;
+        Kd = 0.0f;
+
         xCoordinateSetpoint = 0.0f;
         yCoordinateSetpoint = 0.0f;
+        prevError           = 0.0f;
+        KiIntegral          = 0.0f;
+        linearPower         = 0.0f;
+        rotationalPower     = 0.0f;
     }
 
     @Override
@@ -139,12 +143,17 @@ public class AlotoAutonomous extends VisionOpMode {
              * Target lost, stop robot...
              *------------------------------------------------------------------------------------*/
             driveRobot(0,0);
+            prevError       = 0.0f;
+            KiIntegral      = 0.0f;
+            linearPower     = 0.0f;
+            rotationalPower = 0.0f;
         }
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
         telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);
         telemetry.addData("Kp: ", Kp);
         telemetry.addData("Ki: ", Ki);
+        telemetry.addData("Kd: ", Kd);
         telemetry.addData("Integral Error: ", KiIntegral);
 
     }
@@ -170,9 +179,12 @@ public class AlotoAutonomous extends VisionOpMode {
     {
         double motorPower = 0.0f;
         double error = setPoint - measurement;
+        double derivative = error - prevError;
 
         KiIntegral = KiIntegral + error*Ki;
-        motorPower = KiIntegral + error*Kp;
+        motorPower = KiIntegral + error*Kp + derivative*Kd;
+
+        prevError = error;
         return motorPower;
     }
 }

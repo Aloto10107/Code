@@ -183,35 +183,17 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
 
             if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
 
-            if(waitFirstTouch)
-            {
-                firstTouchX = x;
-                firstTouchY = y;
-                waitFirstTouch = false;
-            }
-            else
-            {
-                waitFirstTouch = true;
+            Rect touchedRect = new Rect();
 
-                if( (x > firstTouchX) && (y > firstTouchY))
-                {
-                    Rect touchedRect = new Rect();
-                    touchedRect.x = firstTouchX;
-                    touchedRect.y = firstTouchY;
+            touchedRect.x = (x > 8) ? x - 8 : 0;
+            touchedRect.y = (y > 8) ? y - 8 : 0;
 
-                    touchedRect.width = x - firstTouchX;
-                    touchedRect.height = y - firstTouchY;
+            touchedRect.width = (x + 8 < cols) ? x + 8 - touchedRect.x : cols - touchedRect.x;
+            touchedRect.height = (y + 8 < rows) ? y + 8 - touchedRect.y : rows - touchedRect.y;
 
-                    /*------------------------------------------------------------------------------
-                     * Set the object tracker to the initialization state. On the next camera frame
-                     * event this state will be entered.
-                     *----------------------------------------------------------------------------*/
-                    rbVis.setObjectTrackInitRect(touchedRect);
-                    rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
-                }
-            }
+            rbVis.setObjectTrackInitRect(touchedRect);
+            rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
         }
-
         return false; // don't need subsequent touch events
     }
 

@@ -26,8 +26,8 @@ public class RobotVision
    private int objectLostCount;
    private static int OBJECT_TRACK_TIMEOUT = 10;
    private static int TRACK_RECT_MAX_SCALAR = 6;
-   private static double HEIGHT_WIDTH_FILTER_AMOUNT = 5;
-   private static double COLOR_FILTER_AMOUNT = 5;
+   private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
+   private static double COLOR_FILTER_AMOUNT = 10;
    private static int INIT_RETRY = 5;
    private static int COLOR_RANGE_STD_MULT = 4;
    private State objectTrackState;
@@ -276,7 +276,7 @@ public class RobotVision
                * desired object to track. Find the center coordinates of the bounding rectangle and
                * initialize a 4 state Kalman filter to track the object.
                *----------------------------------------------------------------------------------*/
-/*            Mat touchedRegionRgba = currentImage.rgba().submat(this.initialRegionOfInterestRect);
+            Mat touchedRegionRgba = currentImage.rgba().submat(this.initialRegionOfInterestRect);
 
             Mat touchedRegionHsv = new Mat();
             Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
@@ -293,53 +293,18 @@ public class RobotVision
 
             this.objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
 
-            this.mDetector.setColorRadius( new Scalar(15,30,30,0));
+            this.mDetector.setColorRadius( new Scalar(15,50,50,0));
             this.mDetector.setHsvColor(this.objectColorHsv);
 
             //Imgproc.resize(this.mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 
             touchedRegionRgba.release();
-            touchedRegionHsv.release();*/
-
-            Mat blobRegionRgba = currentImage.rgba().submat(initialRegionOfInterestRect);
-
-            Mat blobRegionHsv = new Mat();
-            Imgproc.cvtColor(blobRegionRgba, blobRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
-
-            // Calculate average color of touched region
-            MatOfDouble tempMean = new MatOfDouble();
-            MatOfDouble tempStd = new MatOfDouble();
-
-            Core.meanStdDev(blobRegionHsv, tempMean, tempStd);
-
-            Scalar temp = new Scalar(255);
-            Scalar temp2 = new Scalar(255);
-
-            temp.val[0] = tempMean.get(0,0)[0];
-            temp.val[1] = tempMean.get(1,0)[0];
-            temp.val[2] = tempMean.get(2,0)[0];
-            objectColorHsv = temp;
-            objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
-            temp2.val[0] = tempStd.get(0,0)[0];
-            temp2.val[1] = tempStd.get(1,0)[0];
-            temp2.val[2] = tempStd.get(2,0)[0];
-
-            this.mDetector.setColorRadius(temp2);
-            this.mDetector.setHsvColor(temp);
-
-            regionOfInterestRect.x = initialRegionOfInterestRect.x;
-            regionOfInterestRect.y = initialRegionOfInterestRect.y;
-            regionOfInterestRect.width = initialRegionOfInterestRect.width;
-            regionOfInterestRect.height = initialRegionOfInterestRect.height;
-
-            blobRegionRgba.release();
-            blobRegionHsv.release();
+            touchedRegionHsv.release();
 
             /*--------------------------------------------------------------------------------------
              * Find the blob in the region that was touched.
              *------------------------------------------------------------------------------------*/
-            //List<Rect> blobs = this.findBlobs(currentImage, false);
-            List<Rect> blobs = this.findBlobs(currentImage, true);
+            List<Rect> blobs = this.findBlobs(currentImage, false);
 
             Double area;
             int x;
@@ -349,7 +314,7 @@ public class RobotVision
             boolean objectMatch = false;
             int blobNumber = 0;
 
-/*            for(int i = 0; i < blobs.size(); i++)
+            for(int i = 0; i < blobs.size(); i++)
             {
                //Scalar blobColor = g.getBlobColor(blobs.get(i));
                x = blobs.get(i).x;
@@ -357,9 +322,6 @@ public class RobotVision
                width = blobs.get(i).width;
                height = blobs.get(i).height;
 
-               *//*-----------------------------------------------------------------------------------
-                * If touched rect is inside the blob rect then its a match.
-                *---------------------------------------------------------------------------------*//*
                int centerx = this.initialRegionOfInterestRect.x + this.initialRegionOfInterestRect.width/2;
                int centery = this.initialRegionOfInterestRect.y + this.initialRegionOfInterestRect.height/2;
                boolean test1 = (centerx >= x) && (centerx <= (x + width));
@@ -370,12 +332,10 @@ public class RobotVision
                   blobNumber = i;
                   break;
                }
-            }*/
-
-            blobNumber = 0;
+            }
 
             this.objectLostCount = 0;
-            if(blobs.size()>0)
+            if(objectMatch)
             {
                /*-----------------------------------------------------------------------------------
                 * Object is a match, set the tracking rect to a size 1.5 times larger that the

@@ -145,6 +145,7 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
     }
 
     public void onCameraViewStarted(int width, int height)
@@ -171,7 +172,7 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
         mRgba.release();
     }
 
-    public boolean onTouch(View v, MotionEvent event)
+/*    public boolean onTouch(View v, MotionEvent event)
     {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
@@ -207,19 +208,19 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
                     touchedRect.width = x - firstTouchX;
                     touchedRect.height = y - firstTouchY;
 
-                    /*------------------------------------------------------------------------------
+                    *//*------------------------------------------------------------------------------
                      * Set the object tracker to the initialization state. On the next camera frame
                      * event this state will be entered.
-                     *----------------------------------------------------------------------------*/
+                     *----------------------------------------------------------------------------*//*
                     rbVis.setObjectTrackInitRect(touchedRect);
                     rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
                 }
             }
         }
         return false; // don't need subsequent touch events
-    }
+    }*/
 
-/*    public boolean onTouch(View v, MotionEvent event)
+    public boolean onTouch(View v, MotionEvent event)
     {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
@@ -238,21 +239,17 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
 
             Rect touchedRect = new Rect();
 
-            touchedRect.x = (x > 16) ? x - 16 : 0;
-            touchedRect.y = (y > 16) ? y - 16 : 0;
+            touchedRect.x = (x > 8) ? x - 8 : 0;
+            touchedRect.y = (y > 8) ? y - 8 : 0;
 
-            touchedRect.width = (x + 16 < cols) ? x + 16 - touchedRect.x : cols - touchedRect.x;
-            touchedRect.height = (y + 16 < rows) ? y + 16 - touchedRect.y : rows - touchedRect.y;
+            touchedRect.width = (x + 8 < cols) ? x + 8 - touchedRect.x : cols - touchedRect.x;
+            touchedRect.height = (y + 8 < rows) ? y + 8 - touchedRect.y : rows - touchedRect.y;
 
-      *//*--------------------------------------------------------------------------------------------
-       * Set the object tracker to the initialization state. On the next camera frame event this
-       * state will be entered.
-       *------------------------------------------------------------------------------------------*//*
             rbVis.setObjectTrackInitRect(touchedRect);
             rbVis.setObjectTrackState(RobotVision.State.OBJECT_TRACK_INIT);
         }
         return false; // don't need subsequent touch events
-    }*/
+    }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame)
     {
