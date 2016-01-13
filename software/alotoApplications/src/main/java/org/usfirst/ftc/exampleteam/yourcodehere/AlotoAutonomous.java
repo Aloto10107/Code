@@ -103,30 +103,41 @@ public class AlotoAutonomous extends VisionOpMode {
 
         //if( Ki < 0.0f)
         //    Ki = 0.0f;
+        
         /*------------------------------------------------------------------------------------------
-         * If the Robot Vision library has the target locked then drive robot to desired location.
+         * Target locked, drive robot...
          *----------------------------------------------------------------------------------------*/
         if( rbVis.isTargetLocked() == true)
         {
             int[] rawTarget         = rbVis.getRawTargetCoords();
             double[] filteredTarget = rbVis.getFilteredTargetCoords();
-            objectXCoord = filteredTarget[0];
-            objectYCoord = filteredTarget[1];
-            objectdx     = filteredTarget[2];
-            objectdy     = filteredTarget[3];
-            objectWidth  = filteredTarget[4];
-            objectHeight = filteredTarget[5];
+            objectXCoord            = filteredTarget[0]; /*Target 'x' position on camera screen*/
+            objectYCoord            = filteredTarget[1]; /*Target 'y' position on camera screen*/
+            objectdx                = filteredTarget[2]; /*The speed of the target on the x plane (pixels/sec)*/
+            objectdy                = filteredTarget[3]; /*The speed of the target on the y plane (pixels/sec)*/
+            objectWidth             = filteredTarget[4]; /*The width of the target as seen by the camera*/
+            objectHeight            = filteredTarget[5]; /*The height of the target as seen by the camera*/
 
+            /*--------------------------------------------------------------------------------------
+             * Smooth out the error in the 'x' position before using it to turn the robot left or
+             * right.
+             *------------------------------------------------------------------------------------*/
             rotationalPower = motorPIDController(xCoordinateSetpoint, objectXCoord);
 
+            /*--------------------------------------------------------------------------------------
+             * Turn robot based on desired target 'x' coordinate location.
+             *------------------------------------------------------------------------------------*/
             driveRobot(linearPower, rotationalPower);
 
             telemetry.addData("Position Error: ", xCoordinateSetpoint - objectXCoord);
             telemetry.addData("Motor power: ", rotationalPower);
             telemetry.addData("Coords:", "x: " + (int) objectXCoord + " y: " + (int) objectYCoord + " area: " + (int) (objectWidth * objectHeight));
-        }
+        }/*End if( rbVis.isTargetLocked() == true)*/
         else
         {
+            /*--------------------------------------------------------------------------------------
+             * Target lost, stop robot...
+             *------------------------------------------------------------------------------------*/
             driveRobot(0,0);
         }
 
