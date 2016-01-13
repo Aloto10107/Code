@@ -32,8 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 package org.usfirst.ftc.exampleteam.yourcodehere;
 
 import com.qualcomm.ftcrobotcontroller.opmodes.VisionOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.opencv.core.Rect;
+import org.swerverobotics.library.ClassFactory;
 
 import java.util.ArrayList;
 
@@ -53,19 +55,45 @@ public class AlotoAutonomous extends VisionOpMode {
     private double Kp;
     private double Ki;
     private double Kd;
+    private double KiIntegral;
+
+    DcMotor FrontmotorRight;
+    DcMotor FrontmotorLeft;
+    DcMotor BackmotorRight;
+    DcMotor BackmotorLeft;
 
     @Override
     public void init() {
         super.init();
+        FrontmotorRight   = hardwareMap.dcMotor.get("motor_fr");
+        FrontmotorLeft    = hardwareMap.dcMotor.get("motor_fl");
+        BackmotorRight    = hardwareMap.dcMotor.get("motor_br");
+        BackmotorLeft     = hardwareMap.dcMotor.get("motor_bl");
+
+        FrontmotorLeft.setDirection(DcMotor.Direction.REVERSE);
+        BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
+        BackmotorRight.setDirection(DcMotor.Direction.REVERSE);
+
+        ClassFactory.createEasyMotorController(this, FrontmotorLeft, BackmotorLeft);
+        ClassFactory.createEasyMotorController(this, FrontmotorRight, BackmotorRight);
 
         //this.setCamera(Cameras.PRIMARY);
         //this.setFrameSize(new Size(400, 400));
+        KiIntegral = 0;
+        Ki = .001;
+        Kp = .04/8;
 
     }
 
     @Override
     public void loop() {
         super.loop();
+
+        //float Ki = -gamepad1.left_stick_y/100;
+
+        //if( Ki < 0.0f)
+        //    Ki = 0.0f;
+
         if( rbVis.isTargetLocked() == true)
         {
             int[] rawTarget = rbVis.getRawTargetCoords();
@@ -77,11 +105,27 @@ public class AlotoAutonomous extends VisionOpMode {
             objectWidth  = filteredTarget[4];
             objectHeight = filteredTarget[5];
 
-            telemetry.addData("Coords:", "x: " + (int)objectXCoord + " y: " + (int)objectYCoord + " area: " + (int)(objectWidth*objectHeight));
+            double posError = 0.0f - (double)objectXCoord;
+            double motorPower = motorControlPID( posError);
+
+            KiIntegral = KiIntegral + posError*Ki;
+            motorPower = KiIntegral + posError*Kp;
+
+                FrontmotorRight.setPower(motorPower);
+                BackmotorRight.setPower(motorPower);
+                FrontmotorLeft.setPower(-motorPower);
+                BackmotorLeft.setPower(-motorPower);
+
+            telemetry.addData("Position Error: ", posError);
+            telemetry.addData("Motor power: ", motorPower);
+            telemetry.addData("Coords:", "x: " + (int) objectXCoord + " y: " + (int) objectYCoord + " area: " + (int) (objectWidth * objectHeight));
         }
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
         telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);
+        telemetry.addData("Kp: ", Kp);
+        telemetry.addData("Ki: ", Ki);
+
     }
 
     @Override
@@ -92,6 +136,9 @@ public class AlotoAutonomous extends VisionOpMode {
     private double motorControlPID( double error)
     {
         double motorPower = 0.0f;
+
+        KiIntegral = KiIntegral + error*Ki;
+        motorPower = KiIntegral + error*Kp;
         return motorPower;
     }
 }
