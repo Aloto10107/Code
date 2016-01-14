@@ -7,6 +7,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.example.rmmurphy.alotovisionlib.android.Camera;
 import com.qualcomm.ftcrobotcontroller.R;
 import com.example.rmmurphy.alotovisionlib.android.Cameras;
 import com.example.rmmurphy.alotovisionlib.robotVision.RobotVision;
@@ -109,10 +110,18 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
             @Override
             public void run() {
 
+                Camera cam = Cameras.PRIMARY.createCamera();
+                android.hardware.Camera.Parameters pam = cam.getCamera().getParameters();
+
+                pam.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
+                cam.release();
+
                 //Initialize FPS counter
                 fps = new FPS();
 
                 mSpectrum = new Mat();
+
                 SPECTRUM_SIZE = new Size(100, 35);
                 CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
 
@@ -121,6 +130,7 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
                 mOpenCvCameraView.setCvCameraViewListener(t);
                 //mOpenCvCameraView.connectCamera(initialMaxSize, initialMaxSize);
                 mOpenCvCameraView.setOnTouchListener(t);
+
                 mOpenCvCameraView.enableView();
 
                 //Done!
@@ -128,6 +138,7 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
                 height = mOpenCvCameraView.getFrameHeight();
 
                 rbVis = new RobotVision(width, height);
+
                 initialized = true;
                 waitFirstTouch = true;
             }
@@ -155,6 +166,8 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
 
         if (mOpenCvCameraView != null){
             mOpenCvCameraView.disableView();
+            if( mSpectrum != null)
+                mSpectrum.release();
         }
 
     }

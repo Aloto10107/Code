@@ -31,7 +31,7 @@ public class RobotVision
    private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
    private static double COLOR_FILTER_AMOUNT = 10;
    private static int INIT_RETRY = 5;
-   private static int COLOR_RANGE_STD_MULT = 6;
+   private static int COLOR_RANGE_STD_MULT = 5;
    private State objectTrackState;
    private State currentObjectTrackState;
    private Scalar objectColorHsv;

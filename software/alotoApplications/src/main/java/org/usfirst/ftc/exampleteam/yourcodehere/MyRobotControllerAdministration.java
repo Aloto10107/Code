@@ -57,6 +57,7 @@ public class MyRobotControllerAdministration
             manager.register("Autonomous", AlotoAutonomous.class);
             manager.register("Teleops", ALOTOTeleOpUSETHISONE.class);
             manager.register("Camera Teleop", CameraTelop.class);
+            manager.register("Servo Test", ServoTest.class);
         }
 
     /**
