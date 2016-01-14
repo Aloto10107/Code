@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package org.usfirst.ftc.exampleteam.yourcodehere;
 
+import com.example.rmmurphy.alotovisionlib.android.Cameras;
 import com.qualcomm.ftcrobotcontroller.opmodes.VisionOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
@@ -86,16 +87,14 @@ public class AlotoAutonomous extends VisionOpMode {
         //this.setCamera(Cameras.PRIMARY);
         //this.setFrameSize(new Size(400, 400));
 
+
         Ki = .0001f;
         Kp = .001f;
         Kd = 0.0f;
 
         xCoordinateSetpoint = 0.0f;
         yCoordinateSetpoint = 0.0f;
-        prevError           = 0.0f;
-        KiIntegral          = 0.0f;
-        linearPower         = 0.0f;
-        rotationalPower     = 0.0f;
+        resetPIDController();
     }
 
     @Override
@@ -143,10 +142,8 @@ public class AlotoAutonomous extends VisionOpMode {
              * Target lost, stop robot...
              *------------------------------------------------------------------------------------*/
             driveRobot(0,0);
-            prevError       = 0.0f;
-            KiIntegral      = 0.0f;
-            linearPower     = 0.0f;
-            rotationalPower = 0.0f;
+            resetPIDController();
+
         }
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
@@ -173,6 +170,14 @@ public class AlotoAutonomous extends VisionOpMode {
         BackmotorRight.setPower(rightPower);
         FrontmotorLeft.setPower(leftPower);
         BackmotorLeft.setPower(leftPower);
+    }
+
+    private void resetPIDController()
+    {
+        prevError       = 0.0f;
+        KiIntegral      = 0.0f;
+        linearPower     = 0.0f;
+        rotationalPower = 0.0f;
     }
 
     private double motorPIDController( double setPoint, double measurement)

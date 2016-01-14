@@ -65,6 +65,8 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
         mOpenCvCameraView.disconnectCamera();
         mOpenCvCameraView.setCameraIndex(camera.getID());
         mOpenCvCameraView.connectCamera(width, height);
+
+
     }
 
     public final void setFrameSize(Size frameSize) {
@@ -151,8 +153,10 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
     public void stop() {
         super.stop();
 
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null){
             mOpenCvCameraView.disableView();
+        }
+
     }
 
     @Override

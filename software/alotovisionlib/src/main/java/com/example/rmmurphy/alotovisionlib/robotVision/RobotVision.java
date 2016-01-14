@@ -5,6 +5,8 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Rect;
@@ -29,7 +31,7 @@ public class RobotVision
    private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
    private static double COLOR_FILTER_AMOUNT = 10;
    private static int INIT_RETRY = 5;
-   private static int COLOR_RANGE_STD_MULT = 4;
+   private static int COLOR_RANGE_STD_MULT = 6;
    private State objectTrackState;
    private State currentObjectTrackState;
    private Scalar objectColorHsv;
@@ -52,6 +54,15 @@ public class RobotVision
    private Scalar avrTargetColorHSV;
    private Scalar avrTargetStdHSV;
    private double targetHeightToWidthRatio;
+
+   private Mat hsvHistogram;
+   private ArrayList<Mat> histImages;
+   private MatOfFloat hsvRanges;
+   private MatOfInt histChannels;
+   private int hBins = 64;
+   private int sBins = 64;
+   private int vBins = 64;
+   private MatOfInt histSize;
 
    public enum State
    {
@@ -124,7 +135,7 @@ public class RobotVision
       /*--------------------------------------------------------------------------------------------
        * We have known starting coordinates so set this value high.
        *------------------------------------------------------------------------------------------*/
-      Core.setIdentity( errorCovPost, Scalar.all(1));
+      Core.setIdentity(errorCovPost, Scalar.all(1));
 
       kalman.set_measurementMatrix(meas);
       kalman.set_processNoiseCov(kalmanProcNoiseCov);
@@ -152,6 +163,12 @@ public class RobotVision
       avrTargetStdHSV   = new Scalar(255);
       targetHeightToWidthRatio = 0.0f;
 
+
+      hsvHistogram = new Mat();
+      histImages   = new ArrayList<Mat>();
+      hsvRanges =  new MatOfFloat( 0f,256f,0f,256f,0f,256f);
+      histChannels = new MatOfInt(0, 1, 2);
+      histSize = new MatOfInt( hBins,  sBins, vBins);
    }
 
    public ColorBlobDetector getBlobDetector()
@@ -293,7 +310,7 @@ public class RobotVision
 
             this.objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
 
-            this.mDetector.setColorRadius( new Scalar(15,50,50,0));
+            this.mDetector.setColorRadius( new Scalar(15,30,30,0));
             this.mDetector.setHsvColor(this.objectColorHsv);
 
             //Imgproc.resize(this.mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
@@ -746,6 +763,18 @@ public class RobotVision
       temp2.val[0] = tempStd.get(0,0)[0];
       temp2.val[1] = tempStd.get(1,0)[0];
       temp2.val[2] = tempStd.get(2,0)[0];
+
+      /*--------------------------------------------------------------------------------------------
+       * Calculate the Hue Saturation and Value histogram.
+       *------------------------------------------------------------------------------------------*/
+      //histImages.add(blobRegionHsv);
+      //Imgproc.calcHist( histImages,
+      //                  histChannels,
+      //                  new Mat(),
+      //                  hsvHistogram,
+      //                  histSize,
+      //                  hsvRanges,
+      //                  false);
 
       blobRegionRgba.release();
       blobRegionHsv.release();

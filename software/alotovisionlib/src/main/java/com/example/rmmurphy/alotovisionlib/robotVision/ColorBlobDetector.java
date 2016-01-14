@@ -11,6 +11,7 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 public class ColorBlobDetector {
     // Lower and Upper bounds for range checking in HSV color space
@@ -30,6 +31,7 @@ public class ColorBlobDetector {
     Mat mDilatedMask = new Mat();
     Mat mErodeMask = new Mat();
     Mat mHierarchy = new Mat();
+    Mat denoised  = new Mat();
 
     public void setColorRadius(Scalar radius) {
         mColorRadius = radius;
@@ -79,12 +81,13 @@ public class ColorBlobDetector {
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
 
-        Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
+        Imgproc.GaussianBlur(mPyrDownMat, denoised, new Size(5, 5), 2, 2);
+        Imgproc.cvtColor(denoised, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
 
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
 
-        Imgproc.erode(mMask, mErodeMask, Imgproc.getStructuringElement(Imgproc.MORPH_CROSS, new Size(5, 5)));
-        Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_CROSS, new Size(5, 5)));
+        Imgproc.erode(mMask, mErodeMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5)));
+        Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15, 15)));
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 

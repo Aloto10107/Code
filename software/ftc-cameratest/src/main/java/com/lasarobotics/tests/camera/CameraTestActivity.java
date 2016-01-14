@@ -75,6 +75,9 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
         //GET CAMERA PROPERTIES
         Camera cam = Cameras.PRIMARY.createCamera();
         android.hardware.Camera.Parameters pam = cam.getCamera().getParameters();
+
+        pam.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
         focalLength = pam.getFocalLength();
 
         cam.release();
