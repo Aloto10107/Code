@@ -110,13 +110,6 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
             @Override
             public void run() {
 
-                Camera cam = Cameras.PRIMARY.createCamera();
-                android.hardware.Camera.Parameters pam = cam.getCamera().getParameters();
-
-                pam.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-
-                cam.release();
-
                 //Initialize FPS counter
                 fps = new FPS();
 

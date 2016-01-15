@@ -26,12 +26,12 @@ public class RobotVision
 {
    private CvCameraViewFrame currentImage;
    private int objectLostCount;
-   private static int OBJECT_TRACK_TIMEOUT = 10;
-   private static int TRACK_RECT_MAX_SCALAR = 3;
-   private static double HEIGHT_WIDTH_FILTER_AMOUNT = 4;
-   private static double COLOR_FILTER_AMOUNT = 4;
+   private static int OBJECT_TRACK_TIMEOUT = 30;
+   private static int TRACK_RECT_MAX_SCALAR = 4;
+   private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
+   private static double COLOR_FILTER_AMOUNT = 20;
    private static int INIT_RETRY = 5;
-   private static int COLOR_RANGE_STD_MULT = 5;
+   private static int COLOR_RANGE_STD_MULT = 4;
    private State objectTrackState;
    private State currentObjectTrackState;
    private Scalar objectColorHsv;
@@ -410,14 +410,14 @@ public class RobotVision
                avrTargetStdHSV.val[2] = meanVar[1].val[2]*COLOR_RANGE_STD_MULT;
                avrTargetStdHSV.val[3] = 0;
 
-               if( avrTargetStdHSV.val[0] < 10)
-                  avrTargetStdHSV.val[0] = 10;
+               if( avrTargetStdHSV.val[0] < 5)
+                  avrTargetStdHSV.val[0] = 5;
 
-               if( avrTargetStdHSV.val[1] < 10)
-                  avrTargetStdHSV.val[1] = 10;
+               if( avrTargetStdHSV.val[1] < 5)
+                  avrTargetStdHSV.val[1] = 5;
 
-               if( avrTargetStdHSV.val[2] < 10)
-                  avrTargetStdHSV.val[2] = 10;
+               if( avrTargetStdHSV.val[2] < 5)
+                  avrTargetStdHSV.val[2] = 5;
 
                mDetector.setColorRadius(avrTargetStdHSV);
                mDetector.setHsvColor(avrTargetColorHSV);
@@ -537,14 +537,14 @@ public class RobotVision
 
                }
 
-               if( avrTargetStdHSV.val[0] < 10)
-                  avrTargetStdHSV.val[0] = 10;
+               if( avrTargetStdHSV.val[0] < 5)
+                  avrTargetStdHSV.val[0] = 5;
 
-               if( avrTargetStdHSV.val[1] < 10)
-                  avrTargetStdHSV.val[1] = 10;
+               if( avrTargetStdHSV.val[1] < 5)
+                  avrTargetStdHSV.val[1] = 5;
 
-               if( avrTargetStdHSV.val[2] < 10)
-                  avrTargetStdHSV.val[2] = 10;
+               if( avrTargetStdHSV.val[2] < 5)
+                  avrTargetStdHSV.val[2] = 5;
 
                mDetector.setColorRadius(avrTargetStdHSV);
                mDetector.setHsvColor(avrTargetColorHSV);

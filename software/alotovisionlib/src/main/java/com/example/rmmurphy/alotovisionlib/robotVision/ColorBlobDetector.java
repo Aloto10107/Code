@@ -87,7 +87,7 @@ public class ColorBlobDetector {
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
 
         Imgproc.erode(mMask, mErodeMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5)));
-        Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15, 15)));
+        Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(11, 11)));
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 

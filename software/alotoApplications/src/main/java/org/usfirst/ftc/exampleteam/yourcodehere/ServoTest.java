@@ -66,7 +66,7 @@ public class ServoTest extends OpMode {
     DcMotor Hook;
     DcMotor Winch;
     Servo Sweeper;
-    //Servo Sweepers[];
+    Servo Sweepers[];
     List<Servo> servoList = new ArrayList<Servo>();
 
 
@@ -146,7 +146,7 @@ public class ServoTest extends OpMode {
         resetDriveEncoders();
         FrontmotorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
         FrontmotorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        //Sweepers[1] = Sweeper;
+        Sweepers[1] = Sweeper;
 
         armDutyCycle = 1;
         hookDutyCycle = 1;
@@ -243,7 +243,7 @@ public class ServoTest extends OpMode {
         }
         Sweeper.setPosition(servoPosition);
 
-        /*
+
         double servoPosition = 0.1;
         if (servoPosition < 0.9)
         {
@@ -254,7 +254,7 @@ public class ServoTest extends OpMode {
             servoPosition = servoPosition - 0.1;
         }
         Sweeper.setPosition(servoPosition);
-        */
+
 
 
         FrontmotorRight.setPower(right);
