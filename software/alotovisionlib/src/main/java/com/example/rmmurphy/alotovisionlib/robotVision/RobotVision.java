@@ -55,7 +55,10 @@ public class RobotVision
    private Scalar avrTargetStdHSV;
    private double targetHeightToWidthRatio;
 
-   private Mat hsvHistogram;
+   private Mat hueHistogram;
+   private Mat valHistogram;
+   private Mat satHistogram;
+
    private ArrayList<Mat> histImages;
    private MatOfFloat hsvRanges;
    private MatOfInt histChannels;
@@ -164,11 +167,13 @@ public class RobotVision
       targetHeightToWidthRatio = 0.0f;
 
 
-      hsvHistogram = new Mat();
+      hueHistogram = new Mat();
+      valHistogram = new Mat();
+      satHistogram = new Mat();
       histImages   = new ArrayList<Mat>();
-      hsvRanges =  new MatOfFloat( 0f,256f,0f,256f,0f,256f);
-      histChannels = new MatOfInt(0, 1, 2);
-      histSize = new MatOfInt( hBins,  sBins, vBins);
+      hsvRanges =  new MatOfFloat( 0f,256f);
+      histChannels = new MatOfInt(0);
+      histSize = new MatOfInt( 64);
    }
 
    public ColorBlobDetector getBlobDetector()
@@ -767,14 +772,32 @@ public class RobotVision
       /*--------------------------------------------------------------------------------------------
        * Calculate the Hue Saturation and Value histogram.
        *------------------------------------------------------------------------------------------*/
-      //histImages.add(blobRegionHsv);
-      //Imgproc.calcHist( histImages,
-      //                  histChannels,
-      //                  new Mat(),
-      //                  hsvHistogram,
-      //                  histSize,
-      //                  hsvRanges,
-      //                  false);
+
+      Core.split(blobRegionHsv, histImages);
+
+      Imgproc.calcHist((List<Mat>) histImages.get(0),
+              histChannels,
+              new Mat(),
+              hueHistogram,
+              histSize,
+              hsvRanges,
+              false);
+
+      Imgproc.calcHist( (List<Mat>)histImages.get(1),
+                        histChannels,
+                        new Mat(),
+                        valHistogram,
+                        histSize,
+                        hsvRanges,
+                        false);
+
+      Imgproc.calcHist( (List<Mat>)histImages.get(2),
+                        histChannels,
+                        new Mat(),
+                        satHistogram,
+                        histSize,
+                        hsvRanges,
+                        false);
 
       blobRegionRgba.release();
       blobRegionHsv.release();
