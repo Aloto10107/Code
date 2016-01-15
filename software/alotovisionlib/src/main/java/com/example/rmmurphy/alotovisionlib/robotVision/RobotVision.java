@@ -27,9 +27,9 @@ public class RobotVision
    private CvCameraViewFrame currentImage;
    private int objectLostCount;
    private static int OBJECT_TRACK_TIMEOUT = 10;
-   private static int TRACK_RECT_MAX_SCALAR = 6;
-   private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
-   private static double COLOR_FILTER_AMOUNT = 10;
+   private static int TRACK_RECT_MAX_SCALAR = 3;
+   private static double HEIGHT_WIDTH_FILTER_AMOUNT = 4;
+   private static double COLOR_FILTER_AMOUNT = 4;
    private static int INIT_RETRY = 5;
    private static int COLOR_RANGE_STD_MULT = 5;
    private State objectTrackState;
@@ -622,29 +622,29 @@ public class RobotVision
                kalmanTransMatrix.put(1, 3, deltaTimeSec);
                kalman.set_transitionMatrix(kalmanTransMatrix);
 
-               Scalar[] meanVar = getBlobColor(target);
+               //Scalar[] meanVar = getBlobColor(target);
 
-               avrTargetColorHSV = meanVar[0];
-               avrTargetColorHSV.val[0] = meanVar[0].val[0];
-               avrTargetColorHSV.val[1] = meanVar[0].val[1];
-               avrTargetColorHSV.val[2] = meanVar[0].val[2];
-               avrTargetColorHSV.val[3] = 0;
-               avrTargetStdHSV.val[0] = meanVar[1].val[0]*COLOR_RANGE_STD_MULT;
-               avrTargetStdHSV.val[1] = meanVar[1].val[1]*COLOR_RANGE_STD_MULT;
-               avrTargetStdHSV.val[2] = meanVar[1].val[2]*COLOR_RANGE_STD_MULT;
-               avrTargetStdHSV.val[3] = 0;
+               //avrTargetColorHSV = meanVar[0];
+               //avrTargetColorHSV.val[0] = meanVar[0].val[0];
+               //avrTargetColorHSV.val[1] = meanVar[0].val[1];
+               //avrTargetColorHSV.val[2] = meanVar[0].val[2];
+               //avrTargetColorHSV.val[3] = 0;
+               //avrTargetStdHSV.val[0] = meanVar[1].val[0]*COLOR_RANGE_STD_MULT;
+               //avrTargetStdHSV.val[1] = meanVar[1].val[1]*COLOR_RANGE_STD_MULT;
+               //avrTargetStdHSV.val[2] = meanVar[1].val[2]*COLOR_RANGE_STD_MULT;
+               //avrTargetStdHSV.val[3] = 0;
 
-               if( avrTargetStdHSV.val[0] < 10)
-                  avrTargetStdHSV.val[0] = 10;
+               //if( avrTargetStdHSV.val[0] < 10)
+               //   avrTargetStdHSV.val[0] = 10;
 
-               if( avrTargetStdHSV.val[1] < 10)
-                  avrTargetStdHSV.val[1] = 10;
+               //if( avrTargetStdHSV.val[1] < 10)
+               //   avrTargetStdHSV.val[1] = 10;
 
-               if( avrTargetStdHSV.val[2] < 10)
-                  avrTargetStdHSV.val[2] = 10;
+               //if( avrTargetStdHSV.val[2] < 10)
+               //   avrTargetStdHSV.val[2] = 10;
 
-               mDetector.setColorRadius(avrTargetStdHSV);
-               mDetector.setHsvColor(avrTargetColorHSV);
+               //mDetector.setColorRadius(avrTargetStdHSV);
+               //mDetector.setHsvColor(avrTargetColorHSV);
 
                /*-----------------------------------------------------------------------------------
                 * We have known starting coordinates so set this value high.
