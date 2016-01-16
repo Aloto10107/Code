@@ -27,11 +27,11 @@ public class RobotVision
    private CvCameraViewFrame currentImage;
    private int objectLostCount;
    private static int OBJECT_TRACK_TIMEOUT = 30;
-   private static int TRACK_RECT_MAX_SCALAR = 4;
+   private static int TRACK_RECT_MAX_SCALAR = 5;
    private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
    private static double COLOR_FILTER_AMOUNT = 20;
    private static int INIT_RETRY = 5;
-   private static int COLOR_RANGE_STD_MULT = 4;
+   private static int COLOR_RANGE_STD_MULT = 8;
    private State objectTrackState;
    private State currentObjectTrackState;
    private Scalar objectColorHsv;
@@ -410,14 +410,14 @@ public class RobotVision
                avrTargetStdHSV.val[2] = meanVar[1].val[2]*COLOR_RANGE_STD_MULT;
                avrTargetStdHSV.val[3] = 0;
 
-               if( avrTargetStdHSV.val[0] < 5)
-                  avrTargetStdHSV.val[0] = 5;
+               if( avrTargetStdHSV.val[0] < 10)
+                  avrTargetStdHSV.val[0] = 10;
 
-               if( avrTargetStdHSV.val[1] < 5)
-                  avrTargetStdHSV.val[1] = 5;
+               if( avrTargetStdHSV.val[1] < 10)
+                  avrTargetStdHSV.val[1] = 10;
 
-               if( avrTargetStdHSV.val[2] < 5)
-                  avrTargetStdHSV.val[2] = 5;
+               if( avrTargetStdHSV.val[2] < 10)
+                  avrTargetStdHSV.val[2] = 10;
 
                mDetector.setColorRadius(avrTargetStdHSV);
                mDetector.setHsvColor(avrTargetColorHSV);
@@ -537,14 +537,14 @@ public class RobotVision
 
                }
 
-               if( avrTargetStdHSV.val[0] < 5)
-                  avrTargetStdHSV.val[0] = 5;
+               if( avrTargetStdHSV.val[0] < 10)
+                  avrTargetStdHSV.val[0] = 10;
 
-               if( avrTargetStdHSV.val[1] < 5)
-                  avrTargetStdHSV.val[1] = 5;
+               if( avrTargetStdHSV.val[1] < 10)
+                  avrTargetStdHSV.val[1] = 10;
 
-               if( avrTargetStdHSV.val[2] < 5)
-                  avrTargetStdHSV.val[2] = 5;
+               if( avrTargetStdHSV.val[2] < 10)
+                  avrTargetStdHSV.val[2] = 10;
 
                mDetector.setColorRadius(avrTargetStdHSV);
                mDetector.setHsvColor(avrTargetColorHSV);
@@ -734,15 +734,20 @@ public class RobotVision
       x = x - (width/TRACK_RECT_MAX_SCALAR)/2;
       y = y - (height/TRACK_RECT_MAX_SCALAR)/2;
       width = (int)((double)(width/TRACK_RECT_MAX_SCALAR));
+      if( width < 8)
+         width = 8;
       height = (int)((double)(height/TRACK_RECT_MAX_SCALAR));
-
+      if( height < 8)
+         height = 8;
       Rect boundingRect = new Rect();
       boundingRect.x = x;
       boundingRect.y = y;
       boundingRect.width = width;
       boundingRect.height = height;
+      initialRegionOfInterestRect.x = x;
+      initialRegionOfInterestRect.y = y;
 
-      Mat blobRegionRgba = currentImage.rgba().submat(boundingRect);
+      Mat blobRegionRgba = currentImage.rgba().submat(initialRegionOfInterestRect);
 
       Mat blobRegionHsv = new Mat();
       Imgproc.cvtColor(blobRegionRgba, blobRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);

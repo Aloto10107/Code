@@ -54,6 +54,7 @@ public class AlotoAutonomous extends VisionOpMode {
     private double objectdy;
     private double objectWidth;
     private double objectHeight;
+    private double objectArea;
     private double Kp;
     private double Ki;
     private double Kd;
@@ -63,6 +64,13 @@ public class AlotoAutonomous extends VisionOpMode {
     private double xCoordinateSetpoint;
     private double yCoordinateSetpoint;
     private double prevError;
+
+    private enum State
+    {
+        INITIALZE_SETPOINT, DRIVE_TO_RAMP, DRIVE_UP_RAMP, FIND_RAMP, LOST_ROBOT
+    }
+
+    private State robotState;
 
     DcMotor FrontmotorRight;
     DcMotor FrontmotorLeft;
@@ -89,12 +97,13 @@ public class AlotoAutonomous extends VisionOpMode {
 
 
         Ki = .0001f;
-        Kp = .001f;
-        Kd = 0.0f;
+        Kp = .0005f;
+        Kd = 0.0000001f;
 
         xCoordinateSetpoint = 0.0f;
         yCoordinateSetpoint = 0.0f;
         resetPIDController();
+        robotState = State.INITIALZE_SETPOINT;
     }
 
     @Override
@@ -106,45 +115,110 @@ public class AlotoAutonomous extends VisionOpMode {
 
         //if( Ki < 0.0f)
         //    Ki = 0.0f;
-        
+
+        int[] rawTarget         = rbVis.getRawTargetCoords();
+        double[] filteredTarget = rbVis.getFilteredTargetCoords();
+        objectXCoord            = filteredTarget[0]; /*Target 'x' position on camera screen*/
+        objectYCoord            = filteredTarget[1]; /*Target 'y' position on camera screen*/
+        objectdx                = filteredTarget[2]; /*The speed of the target on the x plane (pixels/sec)*/
+        objectdy                = filteredTarget[3]; /*The speed of the target on the y plane (pixels/sec)*/
+        objectWidth             = filteredTarget[4]; /*The width of the target as seen by the camera*/
+        objectHeight            = filteredTarget[5]; /*The height of the target as seen by the camera*/
+        objectArea              = objectWidth*objectHeight;
+
+        switch(robotState)
+        {
+            case INITIALZE_SETPOINT:
+            {
+                linearPower     = 0.0f;
+                rotationalPower = 0.0f;
+                resetPIDController();
+                driveRobot(linearPower, rotationalPower);
+                if( rbVis.isTargetLocked() == true)
+                {
+                    xCoordinateSetpoint = objectXCoord;
+                    robotState = State.DRIVE_TO_RAMP;
+                }
+                else if( rbVis.isTargetLocked() == false)
+                {
+                    robotState = State.FIND_RAMP;
+                }
+            }
+            case DRIVE_TO_RAMP:
+            {
+                if( rbVis.isTargetLocked() == true)
+                {
+                    /*------------------------------------------------------------------------------
+                     * Automonous drives in reverse!
+                     *----------------------------------------------------------------------------*/
+                    linearPower = -.2f;
+                    /*--------------------------------------------------------------------------------------
+                     * Smooth out the error in the 'x' position before using it to turn the robot left or
+                     * right.
+                     *------------------------------------------------------------------------------------*/
+                    rotationalPower = motorPIDController(xCoordinateSetpoint, objectXCoord);
+
+                    /*--------------------------------------------------------------------------------------
+                     * Turn robot based on desired target 'x' coordinate location.
+                     *------------------------------------------------------------------------------------*/
+                    driveRobot(linearPower, rotationalPower);
+
+                    if( objectArea >= 60000)
+                    {
+                        linearPower     = 0.0f;
+                        rotationalPower = 0.0f;
+                        resetPIDController();
+                        driveRobot(linearPower, rotationalPower);
+                        robotState = State.DRIVE_UP_RAMP;
+                    }
+                }
+                else if( rbVis.isTargetLocked() == false)
+                {
+                    linearPower = 0.0f;
+                    rotationalPower = 0.0f;
+                    driveRobot(linearPower, rotationalPower);
+                    robotState = State.FIND_RAMP;
+                }
+            }
+            case DRIVE_UP_RAMP:
+            {
+                if( rbVis.isTargetLocked() == true)
+                {
+
+                }
+                else if( rbVis.isTargetLocked() == false)
+                {
+                    linearPower = 0.0f;
+                    rotationalPower = 0.0f;
+                    driveRobot(linearPower, rotationalPower);
+                }
+            }
+            case FIND_RAMP:
+            {
+                if( rbVis.isTargetLocked() == false)
+                {
+
+                }
+                else if( rbVis.isTargetLocked() == true)
+                {
+                    //robotState = State.INITIALZE_SETPOINT;
+                }
+            }
+            case LOST_ROBOT:
+            {
+
+            }
+        }
+
         /*------------------------------------------------------------------------------------------
          * Target locked, drive robot...
          *----------------------------------------------------------------------------------------*/
         if( rbVis.isTargetLocked() == true)
         {
-            int[] rawTarget         = rbVis.getRawTargetCoords();
-            double[] filteredTarget = rbVis.getFilteredTargetCoords();
-            objectXCoord            = filteredTarget[0]; /*Target 'x' position on camera screen*/
-            objectYCoord            = filteredTarget[1]; /*Target 'y' position on camera screen*/
-            objectdx                = filteredTarget[2]; /*The speed of the target on the x plane (pixels/sec)*/
-            objectdy                = filteredTarget[3]; /*The speed of the target on the y plane (pixels/sec)*/
-            objectWidth             = filteredTarget[4]; /*The width of the target as seen by the camera*/
-            objectHeight            = filteredTarget[5]; /*The height of the target as seen by the camera*/
-
-            /*--------------------------------------------------------------------------------------
-             * Smooth out the error in the 'x' position before using it to turn the robot left or
-             * right.
-             *------------------------------------------------------------------------------------*/
-            rotationalPower = motorPIDController(xCoordinateSetpoint, objectXCoord);
-
-            /*--------------------------------------------------------------------------------------
-             * Turn robot based on desired target 'x' coordinate location.
-             *------------------------------------------------------------------------------------*/
-            driveRobot(linearPower, rotationalPower);
-
             telemetry.addData("Position Error: ", xCoordinateSetpoint - objectXCoord);
             telemetry.addData("Motor power: ", rotationalPower);
             telemetry.addData("Coords:", "x: " + (int) objectXCoord + " y: " + (int) objectYCoord + " area: " + (int) (objectWidth * objectHeight));
         }/*End if( rbVis.isTargetLocked() == true)*/
-        else
-        {
-            /*--------------------------------------------------------------------------------------
-             * Target lost, stop robot...
-             *------------------------------------------------------------------------------------*/
-            driveRobot(0,0);
-            resetPIDController();
-
-        }
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
         telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);
