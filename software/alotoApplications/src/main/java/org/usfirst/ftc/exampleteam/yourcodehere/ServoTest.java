@@ -244,7 +244,7 @@ public class ServoTest extends OpMode {
         Sweeper.setPosition(servoPosition);
 
 
-        double servoPosition = 0.1;
+/*        double servoPosition = 0.1;
         if (servoPosition < 0.9)
         {
             servoPosition = servoPosition + 0.1;
@@ -253,7 +253,7 @@ public class ServoTest extends OpMode {
         {
             servoPosition = servoPosition - 0.1;
         }
-        Sweeper.setPosition(servoPosition);
+        Sweeper.setPosition(servoPosition);*/
 
 
 

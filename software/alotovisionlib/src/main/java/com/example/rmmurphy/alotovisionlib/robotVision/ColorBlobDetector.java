@@ -33,6 +33,16 @@ public class ColorBlobDetector {
     Mat mHierarchy = new Mat();
     Mat denoised  = new Mat();
 
+    public void setHsvLowerBound( Scalar lowerBound)
+    {
+        mLowerBound = lowerBound;
+    }
+
+    public void setHsvUpperBound( Scalar upperBound)
+    {
+        mUpperBound = upperBound;
+    }
+
     public void setColorRadius(Scalar radius) {
         mColorRadius = radius;
     }
@@ -87,11 +97,11 @@ public class ColorBlobDetector {
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
 
         Imgproc.erode(mMask, mErodeMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5)));
-        Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(11, 11)));
+        Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(7, 7)));
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 
-        Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_TC89_L1);
 
         // Find max contour area
         double maxArea = 0;

@@ -5,12 +5,14 @@ import com.example.rmmurphy.alotovisionlib.robotVision.RobotVision;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Easy-to-use, extensible vision op mode
@@ -47,7 +49,7 @@ public abstract class VisionOpMode extends VisionOpModeCore {
         /*------------------------------------------------------------------------------------------
          * Track the color, coordinates, and area of the selected object.
          *----------------------------------------------------------------------------------------*/
-        rbVis.updateObjectTrack(inputFrame);
+        rbVis.updateObjectTrack(rgba);
 
         Rect touchedRect = rbVis.getObjectTrackInitRect();
 
@@ -81,9 +83,17 @@ public abstract class VisionOpMode extends VisionOpModeCore {
 
                 Rect rec = rbVis.getRegionOfInterestRect();
                 Imgproc.rectangle(rgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
+
+
+                int targetIndex =  rbVis.getTargetContourIndex();
+                List<MatOfPoint> blobContours = rbVis.getContours();
+
+                Imgproc.drawContours(rgba, blobContours, targetIndex, new Scalar(255, 255, 255, 255),-1);
+
+                Imgproc.putText(rgba, "[" + (int)filteredTarget[0] + "," + (int)filteredTarget[1] + "," + (int)(filteredTarget[4] * filteredTarget[5]) + "]", new Point((int)filteredTarget[0]+cols/2 + 4, -(int)filteredTarget[1]+rows/2), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
+                Imgproc.circle(rgba, new Point((int) filteredAbsTarget[0], filteredAbsTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
+
             }
-            Imgproc.putText(rgba, "[" + (int)filteredTarget[0] + "," + (int)filteredTarget[1] + "," + (int)(filteredTarget[4] * filteredTarget[5]) + "]", new Point((int)filteredTarget[0]+cols/2 + 4, -(int)filteredTarget[1]+rows/2), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
-            Imgproc.circle(rgba, new Point((int)filteredAbsTarget[0], filteredAbsTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
 
             Mat colorLabel = rgba.submat(4, 40, 4, 40);
             colorLabel.setTo(rbVis.getObjectColorRgb());
