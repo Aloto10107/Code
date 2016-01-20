@@ -77,7 +77,7 @@ public class MyRobotControllerAdministration
     @OnRobotRunning
     public static void playSoundOnRobotRunning(Context context)
         {
-        SwerveUtil.playSound(context, R.raw.ironman);
+        SwerveUtil.playSound(context, R.raw.mariostageclear);
         }
 
     /**

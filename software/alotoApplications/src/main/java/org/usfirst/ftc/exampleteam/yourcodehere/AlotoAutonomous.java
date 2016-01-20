@@ -34,6 +34,7 @@ package org.usfirst.ftc.exampleteam.yourcodehere;
 import com.example.rmmurphy.alotovisionlib.android.Cameras;
 import com.qualcomm.ftcrobotcontroller.opmodes.VisionOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.util.Range;
 
 import org.opencv.core.Rect;
@@ -46,7 +47,8 @@ import java.util.ArrayList;
  * <p/>
  * Enables control of the robot via the gamepad
  */
-public class AlotoAutonomous extends VisionOpMode {
+public class AlotoAutonomous extends VisionOpMode
+{
 
     private double objectXCoord;
     private double objectYCoord;
@@ -67,7 +69,7 @@ public class AlotoAutonomous extends VisionOpMode {
 
     private enum State
     {
-        INITIALZE_SETPOINT, DRIVE_TO_RAMP, DRIVE_UP_RAMP, FIND_RAMP, LOST_ROBOT
+        DRIVE_TO_FRONT_OF_RAMP, INITIALZE_SETPOINT, DRIVE_TO_RAMP, FIND_RAMP, LOST_ROBOT, IDLE
     }
 
     private State robotState;
@@ -78,12 +80,13 @@ public class AlotoAutonomous extends VisionOpMode {
     DcMotor BackmotorLeft;
 
     @Override
-    public void init() {
+    public void init()
+    {
         super.init();
-        FrontmotorRight   = hardwareMap.dcMotor.get("motor_fr");
-        FrontmotorLeft    = hardwareMap.dcMotor.get("motor_fl");
-        BackmotorRight    = hardwareMap.dcMotor.get("motor_br");
-        BackmotorLeft     = hardwareMap.dcMotor.get("motor_bl");
+        FrontmotorRight = hardwareMap.dcMotor.get("motor_fr");
+        FrontmotorLeft  = hardwareMap.dcMotor.get("motor_fl");
+        BackmotorRight  = hardwareMap.dcMotor.get("motor_br");
+        BackmotorLeft   = hardwareMap.dcMotor.get("motor_bl");
 
         FrontmotorLeft.setDirection(DcMotor.Direction.REVERSE);
         BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
@@ -92,9 +95,10 @@ public class AlotoAutonomous extends VisionOpMode {
         ClassFactory.createEasyMotorController(this, FrontmotorLeft, BackmotorLeft);
         ClassFactory.createEasyMotorController(this, FrontmotorRight, BackmotorRight);
 
+        resetDriveEncoders();
+
         //this.setCamera(Cameras.PRIMARY);
         //this.setFrameSize(new Size(400, 400));
-
 
         Ki = .0001f;
         Kp = .0005f;
@@ -111,29 +115,45 @@ public class AlotoAutonomous extends VisionOpMode {
     {
         super.loop();
 
-        //float Ki = -gamepad1.left_stick_y/100;
-
-        //if( Ki < 0.0f)
-        //    Ki = 0.0f;
-
         int[] rawTarget         = rbVis.getRawTargetCoords();
         double[] filteredTarget = rbVis.getFilteredTargetCoords();
+        int leftCount           = getLeftEncoderCount();
+        int rightCount          = getRightEncoderCount();
         objectXCoord            = filteredTarget[0]; /*Target 'x' position on camera screen*/
         objectYCoord            = filteredTarget[1]; /*Target 'y' position on camera screen*/
-        objectdx                = filteredTarget[2]; /*The speed of the target on the x plane (pixels/sec)*/
-        objectdy                = filteredTarget[3]; /*The speed of the target on the y plane (pixels/sec)*/
+        objectdx                = filteredTarget[2]; /*The speed of the target on the x axis (pixels/sec)*/
+        objectdy                = filteredTarget[3]; /*The speed of the target on the y axis (pixels/sec)*/
         objectWidth             = filteredTarget[4]; /*The width of the target as seen by the camera*/
         objectHeight            = filteredTarget[5]; /*The height of the target as seen by the camera*/
         objectArea              = objectWidth*objectHeight;
 
         switch(robotState)
         {
+            case DRIVE_TO_FRONT_OF_RAMP:
+            {
+                /*----------------------------------------------------------------------------------
+                 * Use encoders to drive the robot to a distance in front of the ramp...
+                 *--------------------------------------------------------------------------------*/
+            }
+            case FIND_RAMP:
+            {
+                /*----------------------------------------------------------------------------------
+                 * Search for the ramp by turning the robot left or right depending on whether we
+                 * are on the red or blue alliance.
+                 *--------------------------------------------------------------------------------*/
+                if( rbVis.isTargetLocked() == false)
+                {
+
+                }
+                else if( rbVis.isTargetLocked() == true)
+                {
+                    //robotState = State.INITIALZE_SETPOINT;
+                }
+            }
             case INITIALZE_SETPOINT:
             {
-                linearPower     = 0.0f;
-                rotationalPower = 0.0f;
-                resetPIDController();
-                driveRobot(linearPower, rotationalPower);
+                resetDriveEncoders();
+                stopRobot();
                 if( rbVis.isTargetLocked() == true)
                 {
                     xCoordinateSetpoint = objectXCoord;
@@ -152,63 +172,37 @@ public class AlotoAutonomous extends VisionOpMode {
                      * Automonous drives in reverse!
                      *----------------------------------------------------------------------------*/
                     linearPower = -.2f;
-                    /*--------------------------------------------------------------------------------------
-                     * Smooth out the error in the 'x' position before using it to turn the robot left or
-                     * right.
-                     *------------------------------------------------------------------------------------*/
+                    /*------------------------------------------------------------------------------
+                     * Smooth out the error in the 'x' position before using it to turn the robot
+                     * left or right.
+                     *----------------------------------------------------------------------------*/
                     rotationalPower = motorPIDController(xCoordinateSetpoint, objectXCoord);
 
-                    /*--------------------------------------------------------------------------------------
+                    /*------------------------------------------------------------------------------
                      * Turn robot based on desired target 'x' coordinate location.
-                     *------------------------------------------------------------------------------------*/
+                     *----------------------------------------------------------------------------*/
                     driveRobot(linearPower, rotationalPower);
 
                     if( objectArea >= 60000)
                     {
-                        linearPower     = 0.0f;
-                        rotationalPower = 0.0f;
-                        resetPIDController();
-                        driveRobot(linearPower, rotationalPower);
-                        robotState = State.DRIVE_UP_RAMP;
+                        stopRobot();
+                        robotState = State.IDLE;
                     }
                 }
                 else if( rbVis.isTargetLocked() == false)
                 {
-                    linearPower = 0.0f;
-                    rotationalPower = 0.0f;
-                    driveRobot(linearPower, rotationalPower);
-                    robotState = State.FIND_RAMP;
-                }
-            }
-            case DRIVE_UP_RAMP:
-            {
-                if( rbVis.isTargetLocked() == true)
-                {
-
-                }
-                else if( rbVis.isTargetLocked() == false)
-                {
-                    linearPower = 0.0f;
-                    rotationalPower = 0.0f;
-                    driveRobot(linearPower, rotationalPower);
-                }
-            }
-            case FIND_RAMP:
-            {
-                if( rbVis.isTargetLocked() == false)
-                {
-
-                }
-                else if( rbVis.isTargetLocked() == true)
-                {
-                    //robotState = State.INITIALZE_SETPOINT;
+                    stopRobot();
                 }
             }
             case LOST_ROBOT:
             {
 
             }
-        }
+            case IDLE:
+            {
+
+            }
+        }/*End switch(robotState)*/
 
         /*------------------------------------------------------------------------------------------
          * Target locked, drive robot...
@@ -218,21 +212,19 @@ public class AlotoAutonomous extends VisionOpMode {
             telemetry.addData("Position Error: ", xCoordinateSetpoint - objectXCoord);
             telemetry.addData("Motor power: ", rotationalPower);
             telemetry.addData("Coords:", "x: " + (int) objectXCoord + " y: " + (int) objectYCoord + " area: " + (int) (objectWidth * objectHeight));
+            //telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);
         }/*End if( rbVis.isTargetLocked() == true)*/
 
         telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
-        telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);
-        telemetry.addData("Kp: ", Kp);
-        telemetry.addData("Ki: ", Ki);
-        telemetry.addData("Kd: ", Kd);
-        telemetry.addData("Integral Error: ", KiIntegral);
+        telemetry.addData("Encoders",  "Right: " + rightCount + " Left: " + leftCount);
 
-    }
+    }/*End public void loop()*/
 
     @Override
     public void stop()
     {
         super.stop();
+        stopRobot();
     }
 
     private void driveRobot( double linearPower, double rotationalPower)
@@ -266,4 +258,56 @@ public class AlotoAutonomous extends VisionOpMode {
         prevError = error;
         return motorPower;
     }
+
+    private int getLeftEncoderCount()
+    {
+        int l_return = 0;
+
+        if (FrontmotorLeft != null)
+        {
+            l_return = FrontmotorLeft.getCurrentPosition ();
+        }
+
+        return l_return;
+
+    }
+
+    private int getRightEncoderCount()
+
+    {
+        int l_return = 0;
+
+        if (FrontmotorRight != null)
+        {
+            l_return = FrontmotorRight.getCurrentPosition ();
+        }
+
+        return l_return;
+
+    } // a_right_encoder_count
+
+    private void stopRobot()
+    {
+        linearPower     = 0.0f;
+        rotationalPower = 0.0f;
+        resetPIDController();
+        driveRobot(linearPower, rotationalPower);
+    }
+
+    private void resetDriveEncoders()
+
+    {
+        if (FrontmotorRight != null)
+        {
+            FrontmotorRight.setMode( DcMotorController.RunMode.RESET_ENCODERS);
+            FrontmotorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        }
+
+        if (FrontmotorLeft != null)
+        {
+            FrontmotorLeft.setMode( DcMotorController.RunMode.RESET_ENCODERS);
+            FrontmotorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        }
+
+    } // reset_drive_encoders
 }

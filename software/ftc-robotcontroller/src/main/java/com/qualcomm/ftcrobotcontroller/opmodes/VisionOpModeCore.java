@@ -162,6 +162,7 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
 
         if (mOpenCvCameraView != null){
             mOpenCvCameraView.disableView();
+
             if( mSpectrum != null)
                 mSpectrum.release();
             if( mRgba != null)
