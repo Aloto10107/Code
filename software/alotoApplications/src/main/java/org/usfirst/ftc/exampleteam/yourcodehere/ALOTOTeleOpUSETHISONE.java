@@ -240,6 +240,7 @@ public class ALOTOTeleOpUSETHISONE extends OpMode {
 		telemetry.addData("Text", "*** Duggan Data***");
 		//telemetry.addData("Encoders",  "Right: " + rightCount + " Left: " + leftCount);
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
+		telemetry.addData("Hook power: ", String.format("%.2f", thisaffectsthehook));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
 		//telemetry.addData("sweeper tgt pwr","bothsweeper: " + String.format("%.2f", bothsweeper));
 

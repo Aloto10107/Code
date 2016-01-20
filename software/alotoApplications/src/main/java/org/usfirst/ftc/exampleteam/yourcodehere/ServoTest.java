@@ -65,9 +65,12 @@ public class ServoTest extends OpMode {
     DcMotor Arm;
     DcMotor Hook;
     DcMotor Winch;
-    Servo Sweeper;
+    /*Servo RightServo;
+    Servo LeftServo;
+    Servo BeaconServo;
     Servo Sweepers[];
-    List<Servo> servoList = new ArrayList<Servo>();
+
+    List<Servo> servoList = new ArrayList<Servo>();*/
 
 
     int armDutyCycle;
@@ -133,8 +136,12 @@ public class ServoTest extends OpMode {
         Arm = hardwareMap.dcMotor.get("Arm");
         Hook = hardwareMap.dcMotor.get("Hook");
         Winch = hardwareMap.dcMotor.get("winch");
-        Sweeper = hardwareMap.servo.get("sweeper");
-        servoList.add(Sweeper);
+        /*RightServo = hardwareMap.servo.get("RightServo");
+        LeftServo = hardwareMap.servo.get("LeftServo");
+        BeaconServo = hardwareMap.servo.get("BeaconServo");
+        servoList.add(RightServo);
+        servoList.add(LeftServo);
+        servoList.add(BeaconServo);*/
 
         FrontmotorLeft.setDirection(DcMotor.Direction.REVERSE);
         BackmotorLeft.setDirection(DcMotor.Direction.REVERSE);
@@ -142,11 +149,14 @@ public class ServoTest extends OpMode {
 
         ClassFactory.createEasyMotorController(this, FrontmotorLeft, BackmotorLeft);
         ClassFactory.createEasyMotorController(this, FrontmotorRight, BackmotorRight);
-        ClassFactory.createEasyServoController(this, servoList);
+        //ClassFactory.createEasyServoController(this, servoList);
         resetDriveEncoders();
         FrontmotorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
         FrontmotorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        Sweepers[1] = Sweeper;
+        //Sweepers[1] = RightServo;
+        //Sweepers[2] = LeftServo;
+        //Sweepers[3] = BeaconServo;
+
 
         armDutyCycle = 1;
         hookDutyCycle = 1;
@@ -230,7 +240,7 @@ public class ServoTest extends OpMode {
         thisaffectsthehook = (float) scaleInput(thisaffectsthehook, 1);
 
 
-        double servoPosition = 0;
+/*        double servoPosition = 0;
         if (this.gamepad2.dpad_up)
         {
             servoPosition = servoPosition + 0.1;
@@ -242,9 +252,48 @@ public class ServoTest extends OpMode {
             if (servoPosition < 0) servoPosition = 0;
         }
         Sweeper.setPosition(servoPosition);
+*/
+        double rightZipliners = 0;
+        double leftZipliners = 0;
+        double beaconClimbers = 0;
 
 
-/*        double servoPosition = 0.1;
+/*        rightZipliners = this.gamepad2.right_trigger;
+        {
+            RightServo.setPosition(rightZipliners);
+        }
+
+        leftZipliners = this.gamepad2.left_trigger;
+        {
+            LeftServo.setPosition(leftZipliners);
+        }
+
+        if(this.gamepad2.a = true);
+
+        {
+            beaconClimbers = 1;
+            BeaconServo.setPosition(beaconClimbers);
+
+        }
+        if(this.gamepad2.a = false);
+        {
+            beaconClimbers = 0;
+            BeaconServo.setPosition(beaconClimbers);
+        }
+*/
+
+        /*if(this.gamepad2.dpad_down = true);
+        {
+            servoPosition = 0.5;
+            Sweeper.setPosition(servoPosition);
+        }
+        if (this.gamepad2.dpad_up = true);
+        {
+            servoPosition = 0;
+            Sweeper.setPosition(servoPosition);
+        }*/
+
+/*      double servoPosition = 0.1;
         if (servoPosition < 0.9)
         {
             servoPosition = servoPosition + 0.1;
