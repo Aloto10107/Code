@@ -20,6 +20,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
@@ -27,6 +28,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CameraTestActivity extends Activity implements View.OnTouchListener, CvCameraViewListener2 {
 
@@ -73,14 +75,7 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
 
     private void initialize() {
         //GET CAMERA PROPERTIES
-        Camera cam = Cameras.PRIMARY.createCamera();
-        android.hardware.Camera.Parameters pam = cam.getCamera().getParameters();
 
-        pam.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-
-        focalLength = pam.getFocalLength();
-
-        cam.release();
 
         //GET OBJECT IMAGE
         //Read the target image file
@@ -263,7 +258,7 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
       /*--------------------------------------------------------------------------------------------
        * Track the color, coordinates, and area of the selected object.
        *------------------------------------------------------------------------------------------*/
-        rbVis.updateObjectTrack(inputFrame);
+        rbVis.updateObjectTrack(mRgba);
 
         Rect touchedRect = rbVis.getObjectTrackInitRect();
 
@@ -297,9 +292,17 @@ public class CameraTestActivity extends Activity implements View.OnTouchListener
 
                 Rect rec = rbVis.getRegionOfInterestRect();
                 Imgproc.rectangle(mRgba, new Point(rec.x, rec.y), new Point(rec.x + rec.width, rec.y + rec.height), new Scalar(0, 0, 255, 255), 3);
+
+
+                int targetIndex =  rbVis.getTargetContourIndex();
+                List<MatOfPoint> blobContours = rbVis.getContours();
+
+                Imgproc.drawContours(mRgba, blobContours, targetIndex, new Scalar(255, 255, 255, 255),-1);
+
+                Imgproc.putText(mRgba, "[" + (int)filteredTarget[0] + "," + (int)filteredTarget[1] + "," + (int)(filteredTarget[4] * filteredTarget[5]) + "]", new Point((int)filteredTarget[0]+cols/2 + 4, -(int)filteredTarget[1]+rows/2), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
+                Imgproc.circle(mRgba, new Point((int)filteredAbsTarget[0], filteredAbsTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
+
             }
-            Imgproc.putText(mRgba, "[" + (int)filteredTarget[0] + "," + (int)filteredTarget[1] + "," + (int)(filteredTarget[4] * filteredTarget[5]) + "]", new Point((int)filteredTarget[0]+cols/2 + 4, -(int)filteredTarget[1]+rows/2), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255, 255), 3);
-            Imgproc.circle(mRgba, new Point((int)filteredAbsTarget[0], filteredAbsTarget[1]), 5, new Scalar(0, 255, 0, 255), -1);
 
             Mat colorLabel = mRgba.submat(4, 40, 4, 40);
             colorLabel.setTo(rbVis.getObjectColorRgb());

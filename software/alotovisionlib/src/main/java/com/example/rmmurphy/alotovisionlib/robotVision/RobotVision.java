@@ -11,6 +11,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.video.KalmanFilter;
 
@@ -24,14 +25,13 @@ import static org.opencv.imgproc.Imgproc.boundingRect;
  */
 public class RobotVision
 {
-   private CvCameraViewFrame currentImage;
    private int objectLostCount;
    private static int OBJECT_TRACK_TIMEOUT = 30;
-   private static int TRACK_RECT_MAX_SCALAR = 5;
+   private static double TRACK_RECT_MAX_SCALAR = 5;
    private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
    private static double COLOR_FILTER_AMOUNT = 20;
    private static int INIT_RETRY = 5;
-   private static int COLOR_RANGE_STD_MULT = 8;
+   private static int COLOR_RANGE_STD_MULT = 4;
    private State objectTrackState;
    private State currentObjectTrackState;
    private Scalar objectColorHsv;
@@ -39,6 +39,7 @@ public class RobotVision
    private Rect regionOfInterestRect;
    private Rect initialRegionOfInterestRect;
    private Rect rawTarget;
+   private int rawTargetIndex;
    private long prevNanoTime;
    private ColorBlobDetector mDetector;
    private KalmanFilter kalman;
@@ -55,21 +56,36 @@ public class RobotVision
    private Scalar avrTargetStdHSV;
    private double targetHeightToWidthRatio;
 
-   private Mat hsvHistogram;
-   private ArrayList<Mat> histImages;
+   private Mat hueHistogram;
+   private Mat valHistogram;
+   private Mat satHistogram;
+
    private MatOfFloat hsvRanges;
    private MatOfInt histChannels;
-   private int hBins = 64;
-   private int sBins = 64;
-   private int vBins = 64;
    private MatOfInt histSize;
+   private ArrayList<Mat>hueList;
+   private ArrayList<Mat>satList;
+   private ArrayList<Mat>valList;
+   private ArrayList<Mat>histImages;
+   private ArrayList<Mat>equalizedImage;
+
+   private Mat imgRgbEqualized;
+   private Mat temp;
+   private double[] avrHueHist;
+   private double[] avrSatHist;
+   private double[] avrValHist;
+   private double avrResX;
+   private double avrResY;
+
+   private Mat currentRgba;
 
    public enum State
    {
       OBJECT_FIRST_TOUCH, OBJECT_TRACK_INIT, OBJECT_TRACK, OBJECT_LOST, OBJECT_IDLE
    }
 
-   public ArrayList<Rect> blobs;
+   public ArrayList<Rect> blobRects;
+   private List<MatOfPoint> blobContours;
 
    public RobotVision( int width, int height)
    {
@@ -144,7 +160,7 @@ public class RobotVision
 
       mDetector = new ColorBlobDetector();
 
-      this.blobs = new ArrayList<Rect>();
+      this.blobRects = new ArrayList<Rect>();
       this.objectTrackState = State.OBJECT_IDLE;
       this.currentObjectTrackState = State.OBJECT_IDLE;
       this.objectLostCount = 0;
@@ -164,11 +180,36 @@ public class RobotVision
       targetHeightToWidthRatio = 0.0f;
 
 
-      hsvHistogram = new Mat();
+      hueHistogram = new Mat();
+      valHistogram = new Mat();
+      satHistogram = new Mat();
+      hueList   = new ArrayList<Mat>();
+      satList   = new ArrayList<Mat>();
+      valList   = new ArrayList<Mat>();
+      hsvRanges =  new MatOfFloat( 0f,256f);
+      histChannels = new MatOfInt(0);
+      histSize = new MatOfInt( 256);
       histImages   = new ArrayList<Mat>();
-      hsvRanges =  new MatOfFloat( 0f,256f,0f,256f,0f,256f);
-      histChannels = new MatOfInt(0, 1, 2);
-      histSize = new MatOfInt( hBins,  sBins, vBins);
+      equalizedImage = new ArrayList<Mat>();
+      imgRgbEqualized = new Mat();
+      temp = new Mat();
+      avrHueHist = new double[256];
+      avrSatHist = new double[256];
+      avrValHist = new double[256];
+
+      avrResX = 0;
+      avrResY = 0;
+      currentRgba = new Mat(height, width, CvType.CV_8UC4);
+   }
+
+   public int getTargetContourIndex()
+   {
+      return rawTargetIndex;
+   }
+
+   public List<MatOfPoint> getContours()
+   {
+      return blobContours;
    }
 
    public ColorBlobDetector getBlobDetector()
@@ -225,6 +266,29 @@ public class RobotVision
       return newRet;
    }
 
+   public Rect getInitialRegionOfInterestRect()
+   {
+      int cols = frameCols;
+      int rows = frameRows;
+      Rect newRet = new Rect();
+
+      newRet = initialRegionOfInterestRect;
+
+      if( newRet.x < 0)
+         newRet.x = 0;
+
+      if( newRet.x + newRet.width > cols)
+         newRet.width = cols - newRet.x;
+
+      if( newRet.y < 0)
+         newRet.y = 0;
+
+      if( newRet.y + newRet.height > rows)
+         newRet.height = rows - newRet.y;
+
+      return newRet;
+   }
+
    public void setObjectTrackState(State objectState)
    {
       this.objectTrackState = objectState;
@@ -242,24 +306,15 @@ public class RobotVision
       else
          return false;
    }
-   public void setCameraImage(CvCameraViewFrame currentImage)
-   {
-      this.currentImage = currentImage;
-   }/*End setCameraImage*/
 
-   public CvCameraViewFrame getCameraImage()
+   private void setBlobs(ArrayList<Rect> blobRects)
    {
-      return this.currentImage;
-   }
-
-   private void setBlobs(ArrayList<Rect> blobs)
-   {
-      this.blobs = blobs;
+      this.blobRects = blobRects;
    }
 
    private ArrayList<Rect> getBlobs()
    {
-      return this.blobs;
+      return this.blobRects;
    }/*End getBlobs*/
 
    private Scalar convertScalarHsv2Rgba(Scalar hsvColor)
@@ -271,16 +326,31 @@ public class RobotVision
       return new Scalar(pointMatRgba.get(0, 0));
    }
 
-   public void updateObjectTrack( CvCameraViewFrame currentImage)
+   private Mat equalizedImage(Mat currentRgba)
+   {
+
+      Imgproc.cvtColor(currentRgba, imgRgbEqualized, Imgproc.COLOR_BGR2YCrCb); //change the color image from BGR to YCrCb format
+      Core.split(imgRgbEqualized, equalizedImage); //split the image into channels
+      Imgproc.equalizeHist(equalizedImage.get(0), temp); //equalize histogram on the 1st channel (Y)
+      equalizedImage.set(0, temp);
+      Core.merge(equalizedImage, imgRgbEqualized); //merge 3 channels including the modified 1st channel into one image
+      Imgproc.cvtColor(imgRgbEqualized, currentRgba, Imgproc.COLOR_YCrCb2BGR); //change the color image from YCrCb to BGR format (to
+      return currentRgba;
+   }
+
+   public void updateObjectTrack( Mat frameRgba)
    {
        /*-------------------------------------------------------------------------------------------
         * Store the current camera image...
         *-----------------------------------------------------------------------------------------*/
-      this.currentImage = currentImage;
-      int cols = currentImage.rgba().cols();
-      int rows = currentImage.rgba().rows();
+      frameRgba.copyTo(currentRgba);
+      //currentRgba = frameRgba;
+      int cols = currentRgba.cols();
+      int rows = currentRgba.rows();
       long currentNanoTime = System.nanoTime();
       double deltaTimeSec =  (double)(currentNanoTime - prevNanoTime)  / 1000000000.0;;
+
+      //equalizedImage();
 
       switch(this.objectTrackState)
       {
@@ -293,7 +363,7 @@ public class RobotVision
                * desired object to track. Find the center coordinates of the bounding rectangle and
                * initialize a 4 state Kalman filter to track the object.
                *----------------------------------------------------------------------------------*/
-            Mat touchedRegionRgba = currentImage.rgba().submat(this.initialRegionOfInterestRect);
+            Mat touchedRegionRgba = currentRgba.submat(this.initialRegionOfInterestRect);
 
             Mat touchedRegionHsv = new Mat();
             Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
@@ -304,16 +374,10 @@ public class RobotVision
             for(int i = 0; i < this.objectColorHsv.val.length; i++)
                this.objectColorHsv.val[i] /= pointCount;
 
-            //this.objectColorHsv.val[0] = 120;
-            //this.objectColorHsv.val[1] = 255;
-            //this.objectColorHsv.val[2] = 255;
+            objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
 
-            this.objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
-
-            this.mDetector.setColorRadius( new Scalar(15,30,30,0));
-            this.mDetector.setHsvColor(this.objectColorHsv);
-
-            //Imgproc.resize(this.mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+            mDetector.setColorRadius( new Scalar(10,40,40,0));
+            mDetector.setHsvColor(this.objectColorHsv);
 
             touchedRegionRgba.release();
             touchedRegionHsv.release();
@@ -321,7 +385,7 @@ public class RobotVision
             /*--------------------------------------------------------------------------------------
              * Find the blob in the region that was touched.
              *------------------------------------------------------------------------------------*/
-            List<Rect> blobs = this.findBlobs(currentImage, false);
+            List<Rect> blobRects = this.findBlobs(false);
 
             Double area;
             int x;
@@ -331,18 +395,21 @@ public class RobotVision
             boolean objectMatch = false;
             int blobNumber = 0;
 
-            for(int i = 0; i < blobs.size(); i++)
+            for(int i = 0; i < blobRects.size(); i++)
             {
-               //Scalar blobColor = g.getBlobColor(blobs.get(i));
-               x = blobs.get(i).x;
-               y = blobs.get(i).y;
-               width = blobs.get(i).width;
-               height = blobs.get(i).height;
+               x = blobRects.get(i).x;
+               y = blobRects.get(i).y;
+
+               width = blobRects.get(i).width;
+               height = blobRects.get(i).height;
+
+               x = x - width/2;
+               y = y - height/2;
 
                int centerx = this.initialRegionOfInterestRect.x + this.initialRegionOfInterestRect.width/2;
                int centery = this.initialRegionOfInterestRect.y + this.initialRegionOfInterestRect.height/2;
-               boolean test1 = (centerx >= x) && (centerx <= (x + width));
-               boolean test2 = (centery >= y) && (centery <= (y + height));
+               boolean test1 = (centerx >= x) && (centerx <= (x + 2*width));
+               boolean test2 = (centery >= y) && (centery <= (y + 2*height));
                if(test1 && test2)
                {
                   objectMatch = true;
@@ -358,10 +425,10 @@ public class RobotVision
                 * Object is a match, set the tracking rect to a size 1.5 times larger that the
                 * object rectangle
                 *---------------------------------------------------------------------------------*/
-               x = blobs.get(blobNumber).x;
-               y = blobs.get(blobNumber).y;
-               width = blobs.get(blobNumber).width;
-               height = blobs.get(blobNumber).height;
+               x = blobRects.get(blobNumber).x;
+               y = blobRects.get(blobNumber).y;
+               width = blobRects.get(blobNumber).width;
+               height = blobRects.get(blobNumber).height;
 
                filteredTargetWidthHeight[0] = width;
                filteredTargetWidthHeight[1] = height;
@@ -369,8 +436,8 @@ public class RobotVision
 
                this.regionOfInterestRect.x = (int)((double)x + ((double) width / 2)  - ((double)width*TRACK_RECT_MAX_SCALAR/2));
                this.regionOfInterestRect.y = (int)((double)y + ((double) height / 2) - ((double)height*TRACK_RECT_MAX_SCALAR/2));
-               this.regionOfInterestRect.width = width * TRACK_RECT_MAX_SCALAR;
-               this.regionOfInterestRect.height = height * TRACK_RECT_MAX_SCALAR;
+               this.regionOfInterestRect.width = (int)(width * TRACK_RECT_MAX_SCALAR);
+               this.regionOfInterestRect.height = (int)(height * TRACK_RECT_MAX_SCALAR);
 
                /*-----------------------------------------------------------------------------------
                 * Initialize the Kalman filter to the center coordinates of the object.
@@ -392,11 +459,11 @@ public class RobotVision
                kalman.set_transitionMatrix(kalmanTransMatrix);
 
                Mat procNoise = kalman.get_processNoiseCov();
-               procNoise.put(0,0, 1e-3);
-               procNoise.put(1,1, 1e-3);
+               procNoise.put(0,0, 1e-2);
+               procNoise.put(1,1, 1e-2);
                kalman.set_processNoiseCov(procNoise);
 
-               Scalar[] meanVar = getBlobColor(blobs.get(blobNumber));
+               Scalar[] meanVar = getBlobColor(blobRects.get(blobNumber), true);
 
                avrTargetColorHSV.val[0] = meanVar[0].val[0];
                avrTargetColorHSV.val[1] = meanVar[0].val[1];
@@ -419,7 +486,7 @@ public class RobotVision
                if( avrTargetStdHSV.val[2] < 10)
                   avrTargetStdHSV.val[2] = 10;
 
-               mDetector.setColorRadius(avrTargetStdHSV);
+               //mDetector.setColorRadius(avrTargetStdHSV);
                mDetector.setHsvColor(avrTargetColorHSV);
 
                /*-----------------------------------------------------------------------------------
@@ -430,6 +497,8 @@ public class RobotVision
                kalman.set_errorCovPost(errorCovPost);
                initRetryCount = 0;
                this.objectTrackState = State.OBJECT_TRACK;
+               avrResX = 0;
+               avrResY = 0;
             }
             else
             {
@@ -446,11 +515,15 @@ public class RobotVision
          {
             this.currentObjectTrackState = State.OBJECT_TRACK;
 
-            Rect target = findTarget( true);
-            int x = (int)kalmanTrackedState.get(0,0)[0];
-            int y = (int)kalmanTrackedState.get(1,0)[0];
-            double dx = kalmanTrackedState.get(2,0)[0];
-            double dy = kalmanTrackedState.get(3,0)[0];
+            /*--------------------------------------------------------------------------------------
+             * Look for the target using the last known region of interest, select the winner based
+             * the blob the encompasses the Kalman filtered coordinates.
+             *------------------------------------------------------------------------------------*/
+            Rect target = findTarget( true, true);
+            int x;
+            int y;
+            double dx;
+            double dy;
 
               /*------------------------------------------------------------------------------------
                * Track the location of the object using a Kalman filter. Use the qualtiy of the
@@ -464,21 +537,24 @@ public class RobotVision
              * Update transition matrix dt
              *------------------------------------------------------------------------------------*/
             kalmanTransMatrix.put(0,2, deltaTimeSec);
-            kalmanTransMatrix.put(1,3, deltaTimeSec);
+            kalmanTransMatrix.put(1, 3, deltaTimeSec);
             kalman.set_transitionMatrix(kalmanTransMatrix);
-
-            /*--------------------------------------------------------------------------------------
-             * Kalman prediction...
-             *------------------------------------------------------------------------------------*/
-            kalmanTrackedState = kalman.predict();
 
             if( target != null)
             {
                /*-----------------------------------------------------------------------------------
+                * Kalman prediction...
+                *---------------------------------------------------------------------------------*/
+               kalmanTrackedState = kalman.predict();
+
+               double measX = (double)target.x + (double)target.width/2;
+               double measY = (double)target.y + (double)target.height/2;
+
+               /*-----------------------------------------------------------------------------------
                 * Kalman measurement update...
                 *---------------------------------------------------------------------------------*/
-               kalmanMeas.put( 0, 0, (double)target.x + (double)target.width/2);
-               kalmanMeas.put( 1, 0, (double)target.y + (double)target.height/2);
+               kalmanMeas.put( 0, 0, measX);
+               kalmanMeas.put( 1, 0, measY);
                kalmanTrackedState = kalman.correct( kalmanMeas);
                this.objectLostCount = 0;
                /*-----------------------------------------------------------------------------------
@@ -489,27 +565,38 @@ public class RobotVision
                dx = kalmanTrackedState.get(2,0)[0];
                dy = kalmanTrackedState.get(3,0)[0];
 
+               double xRes = Math.abs( measX - x);
+               double yRes = Math.abs( measY - y);
+
+               avrResX = avrResX*.7f + .3f*xRes;
+               avrResY = avrResY*.7f + .3f*yRes;
+
                Mat procNoise = kalman.get_processNoiseCov();
-               if( Math.abs(dx) > 2)
+
+               if( xRes > (2.0*avrResX))
                {
                   procNoise.put(0,0, procNoise.get(0,0)[0] + 1e-1);
+                  //if( procNoise.get(0,0)[0] > 1)
+                  //   procNoise.put(0,0, 1);
                }
                else
                {
                   procNoise.put(0,0, procNoise.get(0,0)[0] - 1e-1);
-                  if( procNoise.get(0,0)[0] < 1e-3)
-                     procNoise.put(0,0, 1e-3);
+                  if( procNoise.get(0,0)[0] < 1e-2)
+                     procNoise.put(0,0, 1e-2);
                }
 
-               if( Math.abs(dy) > 2)
+               if( yRes > (2.0*avrResY))
                {
                   procNoise.put(1,1, procNoise.get(1,1)[0] + 1e-1);
+                  //if( procNoise.get(1,1)[0] > 1)
+                  //   procNoise.put(1,1, 1);
                }
                else
                {
                   procNoise.put(1,1, procNoise.get(1,1)[0] - 1e-1);
-                  if( procNoise.get(1,1)[0] < 1e-3)
-                     procNoise.put(1,1, 1e-3);
+                  if( procNoise.get(1,1)[0] < 1e-2)
+                     procNoise.put(1,1, 1e-2);
                }
 
                kalman.set_processNoiseCov(procNoise);
@@ -519,16 +606,16 @@ public class RobotVision
 
                targetHeightToWidthRatio = (double)filteredTargetWidthHeight[1]/filteredTargetWidthHeight[0];
 
-               regionOfInterestRect.x = x - ((int)filteredTargetWidthHeight[0]*TRACK_RECT_MAX_SCALAR)/2;
-               regionOfInterestRect.y = y - ((int)filteredTargetWidthHeight[1]*TRACK_RECT_MAX_SCALAR)/2;
+               regionOfInterestRect.x = x - (int)(filteredTargetWidthHeight[0]*TRACK_RECT_MAX_SCALAR)/2;
+               regionOfInterestRect.y = y - (int)(filteredTargetWidthHeight[1]*TRACK_RECT_MAX_SCALAR)/2;
 
-               regionOfInterestRect.width  = (int)filteredTargetWidthHeight[0]*TRACK_RECT_MAX_SCALAR;
-               regionOfInterestRect.height = (int)filteredTargetWidthHeight[1]*TRACK_RECT_MAX_SCALAR;
+               regionOfInterestRect.width  = (int)(filteredTargetWidthHeight[0]*TRACK_RECT_MAX_SCALAR);
+               regionOfInterestRect.height = (int)(filteredTargetWidthHeight[1]*TRACK_RECT_MAX_SCALAR);
 
                /*-----------------------------------------------------------------------------------
                 * Track the average color and color twice the variance of the target.
                 *---------------------------------------------------------------------------------*/
-               Scalar[] meanVar = getBlobColor(target);
+               Scalar[] meanVar = getBlobColor(target, true);
 
                for(int i = 0; i < 3; i++)
                {
@@ -546,7 +633,7 @@ public class RobotVision
                if( avrTargetStdHSV.val[2] < 10)
                   avrTargetStdHSV.val[2] = 10;
 
-               mDetector.setColorRadius(avrTargetStdHSV);
+               //mDetector.setColorRadius(avrTargetStdHSV);
                mDetector.setHsvColor(avrTargetColorHSV);
                objectColorHsv = avrTargetColorHSV;
                objectColorRgb = convertScalarHsv2Rgba(avrTargetColorHSV);
@@ -563,6 +650,7 @@ public class RobotVision
             if(this.objectLostCount == OBJECT_TRACK_TIMEOUT)
             {
                this.objectTrackState = State.OBJECT_LOST;
+               //mDetector.setColorRadius( new Scalar(15,30,30,0));
             }/*End if( this.objectLostCount == OBJECT_TRACK_TIMEOUT)*/
 
             break;/*End case OBJECT_TRACK:*/
@@ -576,7 +664,11 @@ public class RobotVision
 
             this.currentObjectTrackState = State.OBJECT_LOST;
             this.objectLostCount = 0;
-            Rect target = findTarget( false);
+            /*--------------------------------------------------------------------------------------
+             * Look for the target using the entire camera frame, select the winner based on maximum
+             * size.
+             *------------------------------------------------------------------------------------*/
+            Rect target = findTarget( false, false);
 
             if( target != null)
             {
@@ -595,8 +687,8 @@ public class RobotVision
 
                this.regionOfInterestRect.x = (int)((double)x + ((double) width / 2)  - ((double)width*TRACK_RECT_MAX_SCALAR/2));
                this.regionOfInterestRect.y = (int)((double)y + ((double) height / 2) - ((double)height*TRACK_RECT_MAX_SCALAR/2));
-               this.regionOfInterestRect.width = width * TRACK_RECT_MAX_SCALAR;
-               this.regionOfInterestRect.height = height * TRACK_RECT_MAX_SCALAR;
+               this.regionOfInterestRect.width = (int)(width * TRACK_RECT_MAX_SCALAR);
+               this.regionOfInterestRect.height = (int)(height * TRACK_RECT_MAX_SCALAR);
 
                /*-----------------------------------------------------------------------------------
                 * Initialize the Kalman filter to the center coordinates of the object.
@@ -611,8 +703,8 @@ public class RobotVision
                kalman.set_statePre(statePred);
 
                Mat procNoise = kalman.get_processNoiseCov();
-               procNoise.put(0, 0, 1e-3);
-               procNoise.put(1, 1, 1e-3);
+               procNoise.put(0, 0, 1e-2);
+               procNoise.put(1, 1, 1e-2);
                kalman.set_processNoiseCov(procNoise);
 
                /*-----------------------------------------------------------------------------------
@@ -622,29 +714,29 @@ public class RobotVision
                kalmanTransMatrix.put(1, 3, deltaTimeSec);
                kalman.set_transitionMatrix(kalmanTransMatrix);
 
-               //Scalar[] meanVar = getBlobColor(target);
+               Scalar[] meanVar = getBlobColor(target, true);
 
-               //avrTargetColorHSV = meanVar[0];
-               //avrTargetColorHSV.val[0] = meanVar[0].val[0];
-               //avrTargetColorHSV.val[1] = meanVar[0].val[1];
-               //avrTargetColorHSV.val[2] = meanVar[0].val[2];
-               //avrTargetColorHSV.val[3] = 0;
-               //avrTargetStdHSV.val[0] = meanVar[1].val[0]*COLOR_RANGE_STD_MULT;
-               //avrTargetStdHSV.val[1] = meanVar[1].val[1]*COLOR_RANGE_STD_MULT;
-               //avrTargetStdHSV.val[2] = meanVar[1].val[2]*COLOR_RANGE_STD_MULT;
-               //avrTargetStdHSV.val[3] = 0;
+               avrTargetColorHSV = meanVar[0];
+               avrTargetColorHSV.val[0] = meanVar[0].val[0];
+               avrTargetColorHSV.val[1] = meanVar[0].val[1];
+               avrTargetColorHSV.val[2] = meanVar[0].val[2];
+               avrTargetColorHSV.val[3] = 0;
+               avrTargetStdHSV.val[0] = meanVar[1].val[0]*COLOR_RANGE_STD_MULT;
+               avrTargetStdHSV.val[1] = meanVar[1].val[1]*COLOR_RANGE_STD_MULT;
+               avrTargetStdHSV.val[2] = meanVar[1].val[2]*COLOR_RANGE_STD_MULT;
+               avrTargetStdHSV.val[3] = 0;
 
-               //if( avrTargetStdHSV.val[0] < 10)
-               //   avrTargetStdHSV.val[0] = 10;
+               if( avrTargetStdHSV.val[0] < 10)
+                  avrTargetStdHSV.val[0] = 10;
 
-               //if( avrTargetStdHSV.val[1] < 10)
-               //   avrTargetStdHSV.val[1] = 10;
+               if( avrTargetStdHSV.val[1] < 10)
+                  avrTargetStdHSV.val[1] = 10;
 
-               //if( avrTargetStdHSV.val[2] < 10)
-               //   avrTargetStdHSV.val[2] = 10;
+               if( avrTargetStdHSV.val[2] < 10)
+                  avrTargetStdHSV.val[2] = 10;
 
                //mDetector.setColorRadius(avrTargetStdHSV);
-               //mDetector.setHsvColor(avrTargetColorHSV);
+               mDetector.setHsvColor(avrTargetColorHSV);
 
                /*-----------------------------------------------------------------------------------
                 * We have known starting coordinates so set this value high.
@@ -653,6 +745,8 @@ public class RobotVision
                Core.setIdentity(errorCovPost, Scalar.all(1));
                kalman.set_errorCovPost(errorCovPost);
                initRetryCount = 0;
+               avrResX = 0;
+               avrResY = 0;
                this.objectTrackState = State.OBJECT_TRACK;
             }
 
@@ -716,83 +810,273 @@ public class RobotVision
          return null;
    }
 
-   private Scalar[] getBlobColor(Rect blob)
+   private void computeHistograms( Mat imageHsv)
+   {
+      Core.split(imageHsv, histImages);
+
+      Mat mH = histImages.get(0);
+      Mat mS = histImages.get(1);
+      Mat mV = histImages.get(2);
+      hueList.add(mH);
+      satList.add(mS);
+      valList.add(mV);
+
+      Imgproc.calcHist(hueList,
+              histChannels,
+              new Mat(),
+              hueHistogram,
+              histSize,
+              hsvRanges,
+              false);
+
+      Imgproc.calcHist(satList,
+              histChannels,
+              new Mat(),
+              satHistogram,
+              histSize,
+              hsvRanges,
+              false);
+
+      Imgproc.calcHist(valList,
+              histChannels,
+              new Mat(),
+              valHistogram,
+              histSize,
+              hsvRanges,
+              false);
+
+      //Core.normalize(hueHistogram, hueHistogram);
+      //Core.normalize(satHistogram, satHistogram);
+      //Core.normalize(valHistogram, valHistogram);
+
+      double[] cumHue = new double[256];
+      double[] cumSat = new double[256];
+      double[] cumVal = new double[256];
+
+      for( int index = 0; index < 256; index++)
+      {
+         avrHueHist[index] = avrHueHist[index]*(1 - (1 / COLOR_FILTER_AMOUNT)) + hueHistogram.get(index,0)[0]*(1/COLOR_FILTER_AMOUNT);
+         avrSatHist[index] = avrSatHist[index]*(1 - (1 / COLOR_FILTER_AMOUNT)) + satHistogram.get(index,0)[0]*(1/COLOR_FILTER_AMOUNT);
+         avrValHist[index] = avrValHist[index]*(1 - (1 / COLOR_FILTER_AMOUNT)) + valHistogram.get(index,0)[0]*(1/COLOR_FILTER_AMOUNT);
+      }
+      double sumHue = 0;
+      double sumSat = 0;
+      double sumVal = 0;
+
+      for( int index = 0; index < 256; index++)
+      {
+         sumHue = 0.0f;
+         sumSat = 0.0f;
+         sumVal = 0.0f;
+         for (int index2 = 0; index2 < index; index2++)
+         {
+            sumHue += avrHueHist[index2];
+            sumSat += avrSatHist[index2];
+            sumVal += avrValHist[index2];
+         }
+
+         cumHue[index] = sumHue;
+         cumSat[index] = sumSat;
+         cumVal[index] = sumVal;
+      }
+
+      double maxHue = cumHue[255];
+      double hueLow = 0;
+      double hueHigh = 0;
+      for( int index = 0; index < 256; index++)
+      {
+         if( (cumHue[index] / maxHue) >= .01f)
+         {
+            hueLow = index;
+            break;
+         }
+
+      }
+
+      for( int index = 0; index < 256; index++)
+      {
+         if( (cumHue[index] / maxHue) >= .99f)
+         {
+            hueHigh = index;
+            break;
+         }
+
+      }
+
+      double maxSat = cumSat[255];
+      double satLow = 0;
+      double satHigh = 0;
+      for( int index = 0; index < 256; index++)
+      {
+         if( (cumSat[index] / maxSat) >= .01f)
+         {
+            satLow = index;
+            break;
+         }
+
+      }
+
+      for( int index = 0; index < 256; index++)
+      {
+         if( (cumSat[index] / maxSat) >= .99f)
+         {
+            satHigh = index;
+            break;
+         }
+
+      }
+
+      double maxVal = cumVal[255];
+      double valLow = 0;
+      double valHigh = 0;
+      for( int index = 0; index < 256; index++)
+      {
+         if( (cumVal[index] / maxVal) >= .01f)
+         {
+            valLow = index;
+            break;
+         }
+
+      }
+
+      for( int index = 0; index < 256; index++)
+      {
+         if( (cumVal[index] / maxVal) >= .99f)
+         {
+            valHigh = index;
+            break;
+         }
+
+      }
+
+      mDetector.setHsvLowerBound( new Scalar( hueLow, satLow, valLow, 0));
+      mDetector.setHsvUpperBound(new Scalar(hueHigh, satHigh, valHigh, 255));
+
+   }
+
+   private Scalar[] getBlobColor(Rect blob, boolean trackRect)
    {
       int x;
       int y;
       int width;
       int height;
-
+      int cols = currentRgba.cols();
+      int rows = currentRgba.rows();
       Scalar mBlobColorHsv = new Scalar(255);
-
       double coords[] = getFilteredTargetCoordsAbsolute();
-      x = (int)coords[0];
-      y = (int)coords[1];
-      width = (int)coords[4];
-      height = (int)coords[5];
-
-      x = x - (width/TRACK_RECT_MAX_SCALAR)/2;
-      y = y - (height/TRACK_RECT_MAX_SCALAR)/2;
-      width = (int)((double)(width/TRACK_RECT_MAX_SCALAR));
-      if( width < 8)
-         width = 8;
-      height = (int)((double)(height/TRACK_RECT_MAX_SCALAR));
-      if( height < 8)
-         height = 8;
-      Rect boundingRect = new Rect();
-      boundingRect.x = x;
-      boundingRect.y = y;
-      boundingRect.width = width;
-      boundingRect.height = height;
-      initialRegionOfInterestRect.x = x;
-      initialRegionOfInterestRect.y = y;
-
-      Mat blobRegionRgba = currentImage.rgba().submat(initialRegionOfInterestRect);
-
-      Mat blobRegionHsv = new Mat();
-      Imgproc.cvtColor(blobRegionRgba, blobRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
-
       // Calculate average color of touched region
       MatOfDouble tempMean = new MatOfDouble();
       MatOfDouble tempStd = new MatOfDouble();
 
-      Core.meanStdDev(blobRegionHsv, tempMean, tempStd);
+      if( trackRect)
+      {
 
-      Scalar temp = new Scalar(255);
-      Scalar temp2 = new Scalar(255);
+         x = (int) coords[0];
+         y = (int) coords[1];
+         width = (int) coords[4];
+         height = (int) coords[5];
 
-      temp.val[0] = tempMean.get(0,0)[0];
-      temp.val[1] = tempMean.get(1,0)[0];
-      temp.val[2] = tempMean.get(2,0)[0];
+         x = x - (int) (width / TRACK_RECT_MAX_SCALAR) / 2;
+         y = y - (int) (height / TRACK_RECT_MAX_SCALAR) / 2;
+         width = (int) ((double) (width / TRACK_RECT_MAX_SCALAR));
+         if (width < 8)
+            width = 8;
+         height = (int) ((double) (height / TRACK_RECT_MAX_SCALAR));
+         if (height < 8)
+            height = 8;
 
-      temp2.val[0] = tempStd.get(0,0)[0];
-      temp2.val[1] = tempStd.get(1,0)[0];
-      temp2.val[2] = tempStd.get(2,0)[0];
+         if (x < 0)
+            x = 0;
+
+         if (x + width > cols)
+            width = cols - x;
+
+         if (y < 0)
+            y = 0;
+
+         if (y + height > rows)
+            height = rows - y;
+
+         Rect boundingRect = new Rect();
+         boundingRect.x = x;
+         boundingRect.y = y;
+         boundingRect.width = width;
+         boundingRect.height = height;
+
+         Mat blobRegionRgba = currentRgba.submat(boundingRect);
+
+         Mat blobRegionHsv = new Mat();
+         Imgproc.cvtColor(blobRegionRgba, blobRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+
+         //blobRegionRgba = equalizedImage(blobRegionRgba);
+
+         Core.meanStdDev(blobRegionHsv, tempMean, tempStd);
+
+         Scalar temp = new Scalar(255);
+         Scalar temp2 = new Scalar(255);
+
+         temp.val[0] = tempMean.get(0, 0)[0];
+         temp.val[1] = tempMean.get(1, 0)[0];
+         temp.val[2] = tempMean.get(2, 0)[0];
+
+         temp2.val[0] = tempStd.get(0, 0)[0];
+         temp2.val[1] = tempStd.get(1, 0)[0];
+         temp2.val[2] = tempStd.get(2, 0)[0];
+
+         //if( currentObjectTrackState == State.OBJECT_TRACK)
+         //   computeHistograms(blobRegionHsv);
+
+         blobRegionRgba.release();
+         blobRegionHsv.release();
+
+         return new Scalar[]{temp,temp2};
+      }
+      else
+      {
+         Rect newRect = getRegionOfInterestRect();
+         Mat blobRegionRgba2 = currentRgba.submat(newRect);
+
+         Mat blobRegionHsv2 = new Mat();
+         Imgproc.cvtColor(blobRegionRgba2, blobRegionHsv2, Imgproc.COLOR_RGB2HSV_FULL);
+
+         //blobRegionRgba2 = equalizedImage(blobRegionRgba2);
+
+         Mat mask = new Mat(new Size(blobRegionHsv2.cols(), blobRegionHsv2.rows()), CvType.CV_8UC1);
+
+         mask.setTo(new Scalar(0.0));
+         Imgproc.drawContours(mask, blobContours, rawTargetIndex, new Scalar(255), -1);
+
+         Core.meanStdDev(blobRegionHsv2, tempMean, tempStd, mask);
+
+         Scalar temp3 = new Scalar(255);
+         Scalar temp4 = new Scalar(255);
+
+         temp3.val[0] = tempMean.get(0, 0)[0];
+         temp3.val[1] = tempMean.get(1, 0)[0];
+         temp3.val[2] = tempMean.get(2, 0)[0];
+
+         temp4.val[0] = tempStd.get(0, 0)[0];
+         temp4.val[1] = tempStd.get(1, 0)[0];
+         temp4.val[2] = tempStd.get(2, 0)[0];
+
+         blobRegionRgba2.release();
+         blobRegionHsv2.release();
 
       /*--------------------------------------------------------------------------------------------
        * Calculate the Hue Saturation and Value histogram.
        *------------------------------------------------------------------------------------------*/
-      //histImages.add(blobRegionHsv);
-      //Imgproc.calcHist( histImages,
-      //                  histChannels,
-      //                  new Mat(),
-      //                  hsvHistogram,
-      //                  histSize,
-      //                  hsvRanges,
-      //                  false);
+         //computeHistograms(blobRegionHsv);
 
-      blobRegionRgba.release();
-      blobRegionHsv.release();
-
-      return new Scalar[]{temp,temp2};
+         return new Scalar[]{temp3, temp4};
+      }
    }
 
-   private Rect findTarget( boolean useROI)
+   private Rect findTarget( boolean useROI, boolean useKalman)
    {
       /*--------------------------------------------------------------------------------------------
        * Find the blob in the region that was touched.
        *------------------------------------------------------------------------------------------*/
-      List<Rect> blobs = this.findBlobs(currentImage, useROI);
+      List<Rect> blobRects = this.findBlobs(useROI);
 
       Double area;
       int x;
@@ -803,38 +1087,46 @@ public class RobotVision
       int blobNumber = 0;
       double[] kalmanCoords = getFilteredTargetCoordsAbsolute();
 
-      double maxArea = 0;
+      double maxArea = 0.0f;
 
-      for(int i = 0; i < blobs.size(); i++)
+      for(int i = 0; i < blobRects.size(); i++)
       {
-         //Scalar blobColor = g.getBlobColor(blobs.get(i));
-         x = blobs.get(i).x;
-         y = blobs.get(i).y;
-         width = blobs.get(i).width;
-         height = blobs.get(i).height;
-         area = blobs.get(i).area();
-         x = x + width/2;
-         y = y + height/2;
+
+         x = blobRects.get(i).x;
+         y = blobRects.get(i).y;
+         width = blobRects.get(i).width;
+         height = blobRects.get(i).height;
+         area   = blobRects.get(i).area();
          /*-----------------------------------------------------------------------------------------
-          * If kalman center is inside the blob rect then its a match.
+          * Double blob area for detection purposes.
           *---------------------------------------------------------------------------------------*/
-         //int centerx = (int)kalmanCoords[0];
-         //int centery = (int)kalmanCoords[1];
-         //boolean test1 = (centerx >= x) && (centerx <= (x + width));
-         //boolean test2 = (centery >= y) && (centery <= (y + height));
-         if(area > maxArea)
+         x = x - width*2;
+         y = y - height*2;
+
+         if( useKalman)
          {
-            maxArea = area;
-            objectMatch = true;
-            blobNumber = i;
-            //break;
+            if (((kalmanCoords[0] >= x) && (kalmanCoords[0] <= (x + 3 * width))) && ((kalmanCoords[1] >= y) && (kalmanCoords[1] <= (y + 3 * height)))) {
+               objectMatch = true;
+               blobNumber = i;
+               break;
+            }
+         }
+         else
+         {
+            if( area > maxArea)
+            {
+               objectMatch = true;
+               maxArea = area;
+               blobNumber = i;
+            }
          }
       }
 
-      if( maxArea > 0)
+      if( objectMatch)
       {
-         rawTarget = blobs.get(blobNumber);
-         return blobs.get(blobNumber);
+         rawTarget = blobRects.get(blobNumber);
+         rawTargetIndex = blobNumber;
+         return blobRects.get(blobNumber);
       }
       else
       {
@@ -843,21 +1135,21 @@ public class RobotVision
       }
    }
 
-   private ArrayList<Rect> findBlobs(CvCameraViewFrame currentImage, boolean useSubMat)
+   private ArrayList<Rect> findBlobs(boolean useSubMat)
    {
-      int cols = currentImage.rgba().cols();
-      int rows = currentImage.rgba().rows();
+      int cols = currentRgba.cols();
+      int rows = currentRgba.rows();
       Rect newRect = getRegionOfInterestRect();
 
       if( useSubMat)
       {
-         Mat trackedRgba = currentImage.rgba().submat(newRect);
+         Mat trackedRgba = currentRgba.submat(newRect);
          this.mDetector.process(trackedRgba);
       }
       else
-         this.mDetector.process(currentImage.rgba());
+         this.mDetector.process(currentRgba);
 
-      List<MatOfPoint> contours = this.mDetector.getContours();
+      blobContours = this.mDetector.getContours();
 
       MatOfPoint2f approxCurve = new MatOfPoint2f();
       Double area;
@@ -867,10 +1159,10 @@ public class RobotVision
       int height;
       ArrayList<Rect> addresses = new ArrayList<Rect>();
 
-      for(int i = 0; i < contours.size(); i++)
+      for(int i = 0; i < blobContours.size(); i++)
       {
          //Convert contours(i) from MatOfPoint to MatOfPoint2f
-         MatOfPoint2f contour2f = new MatOfPoint2f(contours.get(i).toArray());
+         MatOfPoint2f contour2f = new MatOfPoint2f(blobContours.get(i).toArray());
          //Processing on mMOP2f1 which is in type MatOfPoint2f
          double approxDistance = Imgproc.arcLength(contour2f, true) * 0.02;
          Imgproc.approxPolyDP(contour2f, approxCurve, approxDistance, true);
@@ -890,9 +1182,8 @@ public class RobotVision
          addresses.add(rect);
       }
 
-      this.blobs = addresses;
-      this.currentImage = currentImage;
-      return this.blobs;
+      this.blobRects = addresses;
+      return this.blobRects;
    }
 
 }

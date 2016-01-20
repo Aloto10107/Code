@@ -19,6 +19,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
@@ -27,6 +28,7 @@ import org.opencv.core.Size;
 /**
  * Core OpMode class containing most OpenCV functionality
  */
+
 abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, CameraBridgeViewBase.CvCameraViewListener2 {
     private static final int initialMaxSize = 1200;
     private static CameraBridgeViewBase openCVCamera;
@@ -61,6 +63,7 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
     public Mat mSpectrum;
     public Size SPECTRUM_SIZE;
     public Scalar CONTOUR_COLOR;
+    private Mat mRgba;
 
     public final void setCamera(Cameras camera) {
         mOpenCvCameraView.disconnectCamera();
@@ -161,14 +164,18 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
             mOpenCvCameraView.disableView();
             if( mSpectrum != null)
                 mSpectrum.release();
+            if( mRgba != null)
+                mRgba.release();
         }
 
     }
 
     @Override
-    public void onCameraViewStarted(int width, int height) {
+    public void onCameraViewStarted(int width, int height)
+    {
         this.width = width;
         this.height = height;
+        mRgba = new Mat(height, width, CvType.CV_8UC4);
     }
 
     @Override
@@ -178,8 +185,9 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
 
     public boolean onTouch(View v, MotionEvent event)
     {
-        int cols = rbVis.getCameraImage().rgba().cols();
-        int rows = rbVis.getCameraImage().rgba().rows();
+
+        int cols = mRgba.cols();
+        int rows = mRgba.rows();
 
         rbVis.setObjectTrackState(RobotVision.State.OBJECT_IDLE);
 
@@ -213,10 +221,12 @@ abstract class VisionOpModeCore extends OpMode implements View.OnTouchListener, 
             return inputFrame.rgba();
         }
 
+        mRgba = inputFrame.rgba();
+
         telemetry.addData("Vision Status", "Ready!");
 
         fps.update();
-        return frame(inputFrame, inputFrame.rgba(), inputFrame.gray());
+        return frame(inputFrame, mRgba, inputFrame.gray());
     }
 
 }
