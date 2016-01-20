@@ -326,7 +326,7 @@ public class RobotVision
       return new Scalar(pointMatRgba.get(0, 0));
    }
 
-   private Mat equalizedImage(Mat currentRgba)
+   private void equalizedImage()
    {
 
       Imgproc.cvtColor(currentRgba, imgRgbEqualized, Imgproc.COLOR_BGR2YCrCb); //change the color image from BGR to YCrCb format
@@ -335,7 +335,7 @@ public class RobotVision
       equalizedImage.set(0, temp);
       Core.merge(equalizedImage, imgRgbEqualized); //merge 3 channels including the modified 1st channel into one image
       Imgproc.cvtColor(imgRgbEqualized, currentRgba, Imgproc.COLOR_YCrCb2BGR); //change the color image from YCrCb to BGR format (to
-      return currentRgba;
+
    }
 
    public void updateObjectTrack( Mat frameRgba)
