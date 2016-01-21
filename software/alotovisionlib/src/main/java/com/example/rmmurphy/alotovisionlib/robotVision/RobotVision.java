@@ -31,7 +31,7 @@ public class RobotVision
    private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
    private static double COLOR_FILTER_AMOUNT = 20;
    private static int INIT_RETRY = 5;
-   private static int COLOR_RANGE_STD_MULT = 4;
+   private static int COLOR_RANGE_STD_MULT = 3;
    private State objectTrackState;
    private State currentObjectTrackState;
    private Scalar objectColorHsv;
@@ -188,14 +188,14 @@ public class RobotVision
       valList   = new ArrayList<Mat>();
       hsvRanges =  new MatOfFloat( 0f,256f);
       histChannels = new MatOfInt(0);
-      histSize = new MatOfInt( 256);
+      histSize = new MatOfInt( 64);
       histImages   = new ArrayList<Mat>();
       equalizedImage = new ArrayList<Mat>();
       imgRgbEqualized = new Mat();
       temp = new Mat();
-      avrHueHist = new double[256];
-      avrSatHist = new double[256];
-      avrValHist = new double[256];
+      avrHueHist = new double[64];
+      avrSatHist = new double[64];
+      avrValHist = new double[64];
 
       avrResX = 0;
       avrResY = 0;
@@ -326,6 +326,15 @@ public class RobotVision
       return new Scalar(pointMatRgba.get(0, 0));
    }
 
+   private Scalar convertScalarRgba2Hsv(Scalar rgbaColor)
+   {
+      Mat pointMatHsv = new Mat();
+      Mat pointMatRgba = new Mat(1, 1, CvType.CV_8UC3, rgbaColor);
+      Imgproc.cvtColor(pointMatRgba, pointMatHsv, Imgproc.COLOR_RGB2HSV_FULL, 4);
+
+      return new Scalar(pointMatHsv.get(0, 0));
+   }
+
    private void equalizedImage()
    {
 
@@ -365,22 +374,28 @@ public class RobotVision
                *----------------------------------------------------------------------------------*/
             Mat touchedRegionRgba = currentRgba.submat(this.initialRegionOfInterestRect);
 
-            Mat touchedRegionHsv = new Mat();
-            Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+            //Mat touchedRegionHsv = new Mat();
+            //Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
 
             // Calculate average color of touched region
-            this.objectColorHsv = Core.sumElems(touchedRegionHsv);
+            //this.objectColorHsv = Core.sumElems(touchedRegionHsv);
+            //int pointCount = this.initialRegionOfInterestRect.width * this.initialRegionOfInterestRect.height;
+            //for(int i = 0; i < this.objectColorHsv.val.length; i++)
+            //   this.objectColorHsv.val[i] /= pointCount;
+
+            //objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
+
+            // Calculate average color of touched region
+            this.objectColorRgb = Core.sumElems(touchedRegionRgba);
             int pointCount = this.initialRegionOfInterestRect.width * this.initialRegionOfInterestRect.height;
-            for(int i = 0; i < this.objectColorHsv.val.length; i++)
-               this.objectColorHsv.val[i] /= pointCount;
+            for(int i = 0; i < this.objectColorRgb.val.length; i++)
+               this.objectColorRgb.val[i] /= pointCount;
 
-            objectColorRgb = convertScalarHsv2Rgba(this.objectColorHsv);
-
-            mDetector.setColorRadius( new Scalar(10,40,40,0));
-            mDetector.setHsvColor(this.objectColorHsv);
+            mDetector.setColorRadius(new Scalar(15, 40, 40, 0));
+            mDetector.setHsvColor(convertScalarRgba2Hsv(this.objectColorRgb));
 
             touchedRegionRgba.release();
-            touchedRegionHsv.release();
+            //touchedRegionHsv.release();
 
             /*--------------------------------------------------------------------------------------
              * Find the blob in the region that was touched.
@@ -849,11 +864,11 @@ public class RobotVision
       //Core.normalize(satHistogram, satHistogram);
       //Core.normalize(valHistogram, valHistogram);
 
-      double[] cumHue = new double[256];
-      double[] cumSat = new double[256];
-      double[] cumVal = new double[256];
+      double[] cumHue = new double[64];
+      double[] cumSat = new double[64];
+      double[] cumVal = new double[64];
 
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          avrHueHist[index] = avrHueHist[index]*(1 - (1 / COLOR_FILTER_AMOUNT)) + hueHistogram.get(index,0)[0]*(1/COLOR_FILTER_AMOUNT);
          avrSatHist[index] = avrSatHist[index]*(1 - (1 / COLOR_FILTER_AMOUNT)) + satHistogram.get(index,0)[0]*(1/COLOR_FILTER_AMOUNT);
@@ -863,7 +878,7 @@ public class RobotVision
       double sumSat = 0;
       double sumVal = 0;
 
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          sumHue = 0.0f;
          sumSat = 0.0f;
@@ -880,10 +895,10 @@ public class RobotVision
          cumVal[index] = sumVal;
       }
 
-      double maxHue = cumHue[255];
+      double maxHue = cumHue[63];
       double hueLow = 0;
       double hueHigh = 0;
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          if( (cumHue[index] / maxHue) >= .01f)
          {
@@ -893,7 +908,7 @@ public class RobotVision
 
       }
 
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          if( (cumHue[index] / maxHue) >= .99f)
          {
@@ -903,10 +918,10 @@ public class RobotVision
 
       }
 
-      double maxSat = cumSat[255];
+      double maxSat = cumSat[63];
       double satLow = 0;
       double satHigh = 0;
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          if( (cumSat[index] / maxSat) >= .01f)
          {
@@ -916,7 +931,7 @@ public class RobotVision
 
       }
 
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          if( (cumSat[index] / maxSat) >= .99f)
          {
@@ -926,10 +941,10 @@ public class RobotVision
 
       }
 
-      double maxVal = cumVal[255];
+      double maxVal = cumVal[63];
       double valLow = 0;
       double valHigh = 0;
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          if( (cumVal[index] / maxVal) >= .01f)
          {
@@ -939,7 +954,7 @@ public class RobotVision
 
       }
 
-      for( int index = 0; index < 256; index++)
+      for( int index = 0; index < 64; index++)
       {
          if( (cumVal[index] / maxVal) >= .99f)
          {
@@ -949,8 +964,8 @@ public class RobotVision
 
       }
 
-      mDetector.setHsvLowerBound( new Scalar( hueLow, satLow, valLow, 0));
-      mDetector.setHsvUpperBound(new Scalar(hueHigh, satHigh, valHigh, 255));
+      mDetector.setHsvLowerBound( convertScalarRgba2Hsv(new Scalar(hueLow * 4, satLow * 4, 0, 0)));
+      mDetector.setHsvUpperBound(convertScalarRgba2Hsv(new Scalar(hueHigh * 4, satHigh * 4, 255, 255)));
 
    }
 
@@ -1005,15 +1020,20 @@ public class RobotVision
 
          Mat blobRegionRgba = currentRgba.submat(boundingRect);
 
-         Mat blobRegionHsv = new Mat();
-         Imgproc.cvtColor(blobRegionRgba, blobRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+         //Mat blobRegionHsv = new Mat();
+         //Imgproc.cvtColor(blobRegionRgba, blobRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
 
          //blobRegionRgba = equalizedImage(blobRegionRgba);
 
-         Core.meanStdDev(blobRegionHsv, tempMean, tempStd);
+         Core.meanStdDev(blobRegionRgba, tempMean, tempStd);
 
          Scalar temp = new Scalar(255);
          Scalar temp2 = new Scalar(255);
+         Scalar rgblow = new Scalar(255);
+         Scalar rgbhigh = new Scalar(255);
+         Scalar huelow = new Scalar(255);
+         Scalar huehigh = new Scalar(255);
+         Scalar huerange = new Scalar(255);
 
          temp.val[0] = tempMean.get(0, 0)[0];
          temp.val[1] = tempMean.get(1, 0)[0];
@@ -1023,51 +1043,108 @@ public class RobotVision
          temp2.val[1] = tempStd.get(1, 0)[0];
          temp2.val[2] = tempStd.get(2, 0)[0];
 
+         rgblow.val[0] = temp.val[0] - temp2.val[0];
+         if( rgblow.val[0] < 0)
+            rgblow.val[0] = 0;
+         rgblow.val[1] = temp.val[1] - temp2.val[1];
+         if( rgblow.val[1] < 0)
+            rgblow.val[1] = 0;
+         rgblow.val[2] = temp.val[2] - temp2.val[2];
+         if( rgblow.val[2] < 0)
+            rgblow.val[2] = 0;
+
+         rgbhigh.val[0] = temp.val[0] + temp2.val[0];
+         if( rgbhigh.val[0] > 255)
+            rgbhigh.val[0] = 255;
+         rgbhigh.val[1] = temp.val[1] + temp2.val[1];
+         if( rgbhigh.val[1] > 255)
+            rgbhigh.val[1] = 255;
+         rgbhigh.val[2] = temp.val[2] + temp2.val[2];
+         if( rgbhigh.val[2] > 255)
+            rgbhigh.val[2] = 255;
+
+         huelow = convertScalarRgba2Hsv(rgblow);
+         huehigh = convertScalarRgba2Hsv(rgbhigh);
+
+         huerange.val[0] = huehigh.val[0] - huelow.val[0];
+         huerange.val[1] = huehigh.val[1] - huelow.val[1];
+         huerange.val[2] = huehigh.val[2] - huelow.val[2];
+
          //if( currentObjectTrackState == State.OBJECT_TRACK)
-         //   computeHistograms(blobRegionHsv);
+         //computeHistograms(blobRegionRgba);
 
          blobRegionRgba.release();
-         blobRegionHsv.release();
+         //blobRegionHsv.release();
 
-         return new Scalar[]{temp,temp2};
+         return new Scalar[]{convertScalarRgba2Hsv(temp),huerange};
       }
       else
       {
          Rect newRect = getRegionOfInterestRect();
          Mat blobRegionRgba2 = currentRgba.submat(newRect);
 
-         Mat blobRegionHsv2 = new Mat();
-         Imgproc.cvtColor(blobRegionRgba2, blobRegionHsv2, Imgproc.COLOR_RGB2HSV_FULL);
+         //Mat blobRegionHsv2 = new Mat();
+         //Imgproc.cvtColor(blobRegionRgba2, blobRegionHsv2, Imgproc.COLOR_RGB2HSV_FULL);
 
          //blobRegionRgba2 = equalizedImage(blobRegionRgba2);
 
-         Mat mask = new Mat(new Size(blobRegionHsv2.cols(), blobRegionHsv2.rows()), CvType.CV_8UC1);
+         Mat mask = new Mat(new Size(blobRegionRgba2.cols(), blobRegionRgba2.rows()), CvType.CV_8UC1);
 
          mask.setTo(new Scalar(0.0));
          Imgproc.drawContours(mask, blobContours, rawTargetIndex, new Scalar(255), -1);
 
-         Core.meanStdDev(blobRegionHsv2, tempMean, tempStd, mask);
+         Core.meanStdDev(blobRegionRgba2, tempMean, tempStd, mask);
 
-         Scalar temp3 = new Scalar(255);
-         Scalar temp4 = new Scalar(255);
+         Scalar temp = new Scalar(255);
+         Scalar temp2 = new Scalar(255);
+         Scalar rgblow = new Scalar(255);
+         Scalar rgbhigh = new Scalar(255);
+         Scalar huelow = new Scalar(255);
+         Scalar huehigh = new Scalar(255);
+         Scalar huerange = new Scalar(255);
 
-         temp3.val[0] = tempMean.get(0, 0)[0];
-         temp3.val[1] = tempMean.get(1, 0)[0];
-         temp3.val[2] = tempMean.get(2, 0)[0];
+         temp.val[0] = tempMean.get(0, 0)[0];
+         temp.val[1] = tempMean.get(1, 0)[0];
+         temp.val[2] = tempMean.get(2, 0)[0];
 
-         temp4.val[0] = tempStd.get(0, 0)[0];
-         temp4.val[1] = tempStd.get(1, 0)[0];
-         temp4.val[2] = tempStd.get(2, 0)[0];
+         temp2.val[0] = tempStd.get(0, 0)[0];
+         temp2.val[1] = tempStd.get(1, 0)[0];
+         temp2.val[2] = tempStd.get(2, 0)[0];
+
+         rgblow.val[0] = temp.val[0] - temp2.val[0];
+         if( rgblow.val[0] < 0)
+            rgblow.val[0] = 0;
+         rgblow.val[1] = temp.val[1] - temp2.val[1];
+         if( rgblow.val[1] < 0)
+            rgblow.val[1] = 0;
+         rgblow.val[2] = temp.val[2] - temp2.val[2];
+         if( rgblow.val[2] < 0)
+            rgblow.val[2] = 0;
+
+         rgbhigh.val[0] = temp.val[0] + temp2.val[0];
+         if( rgbhigh.val[0] > 255)
+            rgbhigh.val[0] = 255;
+         rgbhigh.val[1] = temp.val[1] + temp2.val[1];
+         if( rgbhigh.val[1] > 255)
+            rgbhigh.val[1] = 255;
+         rgbhigh.val[2] = temp.val[2] + temp2.val[2];
+         if( rgbhigh.val[2] > 255)
+            rgbhigh.val[2] = 255;
+
+         huelow = convertScalarRgba2Hsv(rgblow);
+         huehigh = convertScalarRgba2Hsv(rgbhigh);
+
+         huerange.val[0] = huehigh.val[0] - huelow.val[0];
+         huerange.val[1] = huehigh.val[1] - huelow.val[1];
+         huerange.val[2] = huehigh.val[2] - huelow.val[2];
+
+         //if( currentObjectTrackState == State.OBJECT_TRACK)
+         //computeHistograms(blobRegionRgba);
 
          blobRegionRgba2.release();
-         blobRegionHsv2.release();
+         //blobRegionHsv.release();
 
-      /*--------------------------------------------------------------------------------------------
-       * Calculate the Hue Saturation and Value histogram.
-       *------------------------------------------------------------------------------------------*/
-         //computeHistograms(blobRegionHsv);
-
-         return new Scalar[]{temp3, temp4};
+         return new Scalar[]{convertScalarRgba2Hsv(temp),huerange};
       }
    }
 

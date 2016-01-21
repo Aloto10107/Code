@@ -32,6 +32,8 @@ public class ColorBlobDetector {
     Mat mErodeMask = new Mat();
     Mat mHierarchy = new Mat();
     Mat denoised  = new Mat();
+    Mat mMask1 = new Mat();
+    Mat mMask2 = new Mat();
 
     public void setHsvLowerBound( Scalar lowerBound)
     {
@@ -51,14 +53,20 @@ public class ColorBlobDetector {
         double minH = (hsvColor.val[0] >= mColorRadius.val[0]) ? hsvColor.val[0] - mColorRadius.val[0] : 0;
         double maxH = (hsvColor.val[0] + mColorRadius.val[0] <= 255) ? hsvColor.val[0] + mColorRadius.val[0] : 255;
 
+        /*------------------------------------------------------------------------------------------
+         * Allow for Hue color wrapping...compensate when inrange gets applied.
+         *----------------------------------------------------------------------------------------*/
+        double minHWrap = hsvColor.val[0] - mColorRadius.val[0];
+        double maxHWrap =  hsvColor.val[0] + mColorRadius.val[0];
+
         double minS = (hsvColor.val[1] >= mColorRadius.val[1]) ? hsvColor.val[1] - mColorRadius.val[1] : 0;
         double maxS = (hsvColor.val[1] + mColorRadius.val[1] <= 255) ? hsvColor.val[1] + mColorRadius.val[1] : 255;
 
         double minV = (hsvColor.val[2] >= mColorRadius.val[2]) ? hsvColor.val[2] - mColorRadius.val[2] : 0;
         double maxV = (hsvColor.val[2] + mColorRadius.val[2] <= 255) ? hsvColor.val[2] + mColorRadius.val[2] : 255;
 
-        mLowerBound.val[0] = minH;
-        mUpperBound.val[0] = maxH;
+        mLowerBound.val[0] = minHWrap;
+        mUpperBound.val[0] = maxHWrap;
 
         mLowerBound.val[1] = minS;
         mUpperBound.val[1] = maxS;
@@ -94,7 +102,25 @@ public class ColorBlobDetector {
         Imgproc.GaussianBlur(mPyrDownMat, denoised, new Size(5, 5), 2, 2);
         Imgproc.cvtColor(denoised, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
 
-        Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
+        /*------------------------------------------------------------------------------------------
+         * Check and compensate for red hue wrapping.
+         *----------------------------------------------------------------------------------------*/
+        if( mLowerBound.val[0] < 0)
+        {
+            double temp1 = 255 + mLowerBound.val[0];
+            Core.inRange(mHsvMat, new Scalar(temp1, mLowerBound.val[1], mLowerBound.val[2], mLowerBound.val[3]), new Scalar(255, mUpperBound.val[1], mUpperBound.val[2], mUpperBound.val[3]), mMask1);
+            Core.inRange(mHsvMat, new Scalar(0, mLowerBound.val[1], mLowerBound.val[2], mLowerBound.val[3]), new Scalar(mUpperBound.val[0], mUpperBound.val[1], mUpperBound.val[2], mUpperBound.val[3]), mMask2);
+            Core.bitwise_or(mMask1, mMask2, mMask);
+        }
+        else if( mUpperBound.val[0] > 255)
+        {
+            double temp1 = mUpperBound.val[0] - 255;
+            Core.inRange(mHsvMat, new Scalar(mLowerBound.val[0], mLowerBound.val[1], mLowerBound.val[2], mLowerBound.val[3]), new Scalar(255, mUpperBound.val[1], mUpperBound.val[2], mUpperBound.val[3]), mMask1);
+            Core.inRange(mHsvMat, new Scalar(0, mLowerBound.val[1], mLowerBound.val[2], mLowerBound.val[3]), new Scalar(temp1, mUpperBound.val[1], mUpperBound.val[2], mUpperBound.val[3]), mMask2);
+            Core.bitwise_or(mMask1, mMask2, mMask);
+        }
+        else
+            Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
 
         Imgproc.erode(mMask, mErodeMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5)));
         Imgproc.dilate(mErodeMask, mDilatedMask, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(7, 7)));
