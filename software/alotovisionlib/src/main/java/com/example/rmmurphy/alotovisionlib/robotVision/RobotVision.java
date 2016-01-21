@@ -31,7 +31,7 @@ public class RobotVision
    private static double HEIGHT_WIDTH_FILTER_AMOUNT = 10;
    private static double COLOR_FILTER_AMOUNT = 20;
    private static int INIT_RETRY = 5;
-   private static int COLOR_RANGE_STD_MULT = 3;
+   private static int COLOR_RANGE_STD_MULT = 4;
    private State objectTrackState;
    private State currentObjectTrackState;
    private Scalar objectColorHsv;
@@ -534,7 +534,7 @@ public class RobotVision
              * Look for the target using the last known region of interest, select the winner based
              * the blob the encompasses the Kalman filtered coordinates.
              *------------------------------------------------------------------------------------*/
-            Rect target = findTarget( true, true);
+            Rect target = findTarget( true, false);
             int x;
             int y;
             double dx;
@@ -583,8 +583,8 @@ public class RobotVision
                double xRes = Math.abs( measX - x);
                double yRes = Math.abs( measY - y);
 
-               avrResX = avrResX*.7f + .3f*xRes;
-               avrResY = avrResY*.7f + .3f*yRes;
+               avrResX = avrResX*.9f + .1f*xRes;
+               avrResY = avrResY*.9f + .1f*yRes;
 
                Mat procNoise = kalman.get_processNoiseCov();
 
@@ -1165,6 +1165,7 @@ public class RobotVision
       double[] kalmanCoords = getFilteredTargetCoordsAbsolute();
 
       double maxArea = 0.0f;
+      int widthHeightScalar = 1;
 
       for(int i = 0; i < blobRects.size(); i++)
       {
@@ -1175,14 +1176,14 @@ public class RobotVision
          height = blobRects.get(i).height;
          area   = blobRects.get(i).area();
          /*-----------------------------------------------------------------------------------------
-          * Double blob area for detection purposes.
+          * Extend blob area for detection purposes.
           *---------------------------------------------------------------------------------------*/
-         x = x - width*2;
-         y = y - height*2;
+         x = x - width*widthHeightScalar;
+         y = y - height*widthHeightScalar;
 
          if( useKalman)
          {
-            if (((kalmanCoords[0] >= x) && (kalmanCoords[0] <= (x + 3 * width))) && ((kalmanCoords[1] >= y) && (kalmanCoords[1] <= (y + 3 * height)))) {
+            if (((kalmanCoords[0] >= x) && (kalmanCoords[0] <= (x + 3*widthHeightScalar*width))) && ((kalmanCoords[1] >= y) && (kalmanCoords[1] <= (y + 3*widthHeightScalar*height)))) {
                objectMatch = true;
                blobNumber = i;
                break;
